@@ -1,0 +1,96 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Registration | My Tuition Classes</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .register-box {
+      max-width: 500px;
+      margin: 60px auto;
+      padding: 30px;
+      background: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="register-box">
+      <h3 class="text-center mb-4">Student Registration</h3>
+
+      <!-- Error Box -->
+      <div id="errorMsg" class="alert alert-danger d-none"></div>
+
+      <form id="registerForm" action="http://localhost:3000/register" method="POST">
+        <div class="mb-3">
+          <label for="fullname" class="form-label">Full Name</label>
+          <input type="text" class="form-control" id="fullname" name="fullName" required />
+        </div>
+        <div class="mb-3">
+          <label for="email" class="form-label">Email ID</label>
+          <input type="email" class="form-control" id="email" name="email" required />
+        </div>
+        <div class="mb-3">
+          <label for="mobile" class="form-label">Mobile Number</label>
+          <input type="tel" class="form-control" id="mobile" name="mobile" required />
+        </div>
+        <div class="mb-3">
+          <label for="password" class="form-label">Password</label>
+          <input type="password" class="form-control" id="password" name="password" required />
+        </div>
+        <div class="mb-3">
+          <label for="confirm-password" class="form-label">Confirm Password</label>
+          <input type="password" class="form-control" id="confirm-password" name="confirm-password" required />
+        </div>
+        <div class="d-grid">
+          <button type="submit" class="btn btn-dark">Register</button>
+        </div>
+      </form>
+
+      <p class="text-center mt-3">
+        Already have an account? <a href="login.html">Login here</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('registerForm');
+    const errorMsg = document.getElementById('errorMsg');
+
+    form.addEventListener('submit', function (e) {
+      const password = form.password.value.trim();
+      const confirmPassword = form['confirm-password'].value.trim();
+
+      // Clear previous error
+      errorMsg.classList.add('d-none');
+      errorMsg.textContent = '';
+
+      // Check password match
+      if (password !== confirmPassword) {
+        e.preventDefault(); // stop form from submitting
+        errorMsg.textContent = 'Passwords do not match. Please try again.';
+        errorMsg.classList.remove('d-none');
+        return;
+      }
+
+      // Optional: Password length check
+      if (password.length < 6) {
+        e.preventDefault();
+        errorMsg.textContent = 'Password must be at least 6 characters.';
+        errorMsg.classList.remove('d-none');
+        return;
+      }
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
