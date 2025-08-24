@@ -1,5 +1,3 @@
-require('dotenv').config(); // Load env variables
-
 const express = require('express');
 const db = require('./db'); // Your db.js connection
 const bodyParser = require('body-parser');
