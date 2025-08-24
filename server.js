@@ -13,12 +13,13 @@ app.use(express.static('public')); // serve HTML/CSS/JS
 
 // MySQL connection (Render will inject env vars)
 const connection = mysql.createConnection({
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASS || '',
-  database: process.env.DB_NAME || 'tuition_db',
-  port: process.env.DB_PORT || 3306
+  host: process.env.DB_HOST,        // must be set in environment
+  user: process.env.DB_USER,        // must be set in environment
+  password: process.env.DB_PASSWORD,// must be set in environment
+  database: process.env.DB_NAME,    // must be set in environment
+  port: process.env.DB_PORT         // optional, defaults handled by provider
 });
+
 
 connection.connect((err) => {
   if (err) {
