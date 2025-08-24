@@ -1,30 +1,32 @@
 const express = require('express');
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
 const app = express();
-const PORT = 3000;
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use(express.static('public')); // Serve static files (html/css/js)
+app.use(express.static('public')); // serve HTML/CSS/JS
 
-// MySQL Connection
+// MySQL connection (Render will inject env vars)
 const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'tuition_db'
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'tuition_db',
+  port: process.env.DB_PORT || 3306
 });
 
 connection.connect((err) => {
-  if (err) throw err;
+  if (err) {
+    console.error('❌ Error connecting to MySQL:', err.message);
+    process.exit(1);
+  }
   console.log('✅ Connected to MySQL');
 });
-
 
 // ===================== USER REGISTRATION =====================
 app.post('/register', (req, res) => {
@@ -41,7 +43,6 @@ app.post('/register', (req, res) => {
   });
 });
 
-
 // ===================== LOGIN =====================
 app.post('/login', (req, res) => {
   const { email, password, role } = req.body;
@@ -51,7 +52,6 @@ app.post('/login', (req, res) => {
     if (err) return res.status(500).send('Server error');
 
     if (results.length > 0) {
-      // Send login success with role so frontend can redirect
       res.json({ success: true, role: results[0].role, email: results[0].email });
     } else {
       res.status(401).json({ success: false, message: 'Invalid credentials' });
@@ -59,10 +59,7 @@ app.post('/login', (req, res) => {
   });
 });
 
-
-// ===================== STUDENT DETAILS =====================
-
-// Get student details by email
+// ===================== STUDENT ROUTES =====================
 app.get('/students/email/:email', (req, res) => {
   const email = req.params.email;
   const sql = 'SELECT * FROM students WHERE email = ?';
@@ -73,7 +70,6 @@ app.get('/students/email/:email', (req, res) => {
   });
 });
 
-// Insert or update student details
 app.post('/students/email/:email', (req, res) => {
   const email = req.params.email;
   const { fullName, mobile, batch } = req.body;
@@ -83,14 +79,12 @@ app.post('/students/email/:email', (req, res) => {
     if (err) return res.status(500).send('Server error');
 
     if (results.length > 0) {
-      // Update existing record
       const updateSql = 'UPDATE students SET fullName = ?, mobile = ?, batch = ? WHERE email = ?';
       connection.query(updateSql, [fullName, mobile, batch, email], (err2) => {
         if (err2) return res.status(500).send('Failed to update student');
         res.send('Student updated successfully');
       });
     } else {
-      // Insert new record
       const insertSql = 'INSERT INTO students (fullName, email, mobile, batch) VALUES (?, ?, ?, ?)';
       connection.query(insertSql, [fullName, email, mobile, batch], (err3) => {
         if (err3) return res.status(500).send('Failed to insert student');
@@ -100,10 +94,7 @@ app.post('/students/email/:email', (req, res) => {
   });
 });
 
-
-// ===================== ADMIN USE ONLY =====================
-
-// Get all students
+// ===================== ADMIN =====================
 app.get('/students', (req, res) => {
   const sql = 'SELECT * FROM students';
   connection.query(sql, (err, results) => {
@@ -112,7 +103,6 @@ app.get('/students', (req, res) => {
   });
 });
 
-// Update student by ID
 app.put('/students/:id', (req, res) => {
   const studentId = req.params.id;
   const { fullName, email, mobile, batch } = req.body;
@@ -123,7 +113,6 @@ app.put('/students/:id', (req, res) => {
   });
 });
 
-// Delete student by ID
 app.delete('/students/:id', (req, res) => {
   const studentId = req.params.id;
   const sql = 'DELETE FROM students WHERE id = ?';
@@ -133,8 +122,8 @@ app.delete('/students/:id', (req, res) => {
   });
 });
 
-
 // ===================== START SERVER =====================
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
