@@ -1,9 +1,7 @@
-// server.js
 const express = require('express');
+const db = require('./db');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const bcrypt = require('bcrypt');
-const db = require('./db'); // your db.js
 
 const app = express();
 
@@ -11,62 +9,47 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-app.use(express.static('public')); // serve frontend files
+app.use(express.static('public')); // serve HTML/CSS/JS
 
 // ===================== USER REGISTRATION =====================
-app.post('/register', async (req, res) => {
-  try {
-    const { fullName, email, mobile, password } = req.body;
-    const role = 'student';
+app.post('/register', (req, res) => {
+  const { fullName, email, mobile, password } = req.body;
+  const role = 'student';
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const sql = 'INSERT INTO users (fullName, email, mobile, password, role) VALUES (?, ?, ?, ?, ?)';
-    db.query(sql, [fullName, email, mobile, hashedPassword, role], (err) => {
-      if (err) {
-        console.error('❌ Error inserting user:', err);
-        return res.status(500).send('Error registering user');
-      }
-      res.send('✅ User registered successfully');
-    });
-  } catch (err) {
-    res.status(500).send('Server error');
-  }
+  const sql = 'INSERT INTO users (fullName, email, mobile, password, role) VALUES (?, ?, ?, ?, ?)';
+  db.query(sql, [fullName, email, mobile, password, role], (err) => {
+    if (err) {
+      console.error('❌ Error inserting user:', err);
+      return res.status(500).send('Error registering user');
+    }
+    res.send('✅ User registered successfully');
+  });
 });
 
 // ===================== LOGIN =====================
 app.post('/login', (req, res) => {
   const { email, password, role } = req.body;
 
-  const sql = 'SELECT * FROM users WHERE email = ? AND role = ?';
-  db.query(sql, [email, role], async (err, results) => {
-    if (err) return res.status(500).send('Server error');
-
-    if (results.length === 0) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+  const sql = 'SELECT * FROM users WHERE email = ? AND password = ? AND role = ?';
+  db.query(sql, [email, password, role], (err, results) => {
+    if (err) {
+      console.error('Login error:', err);
+      return res.status(500).send('Server error');
     }
 
-    const user = results[0];
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.status(401).json({ success: false, message: 'Invalid credentials' });
-
-    res.json({ success: true, role: user.role, email: user.email });
+    if (results.length > 0) {
+      res.json({ success: true, role: results[0].role, email: results[0].email });
+    } else {
+      res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
   });
 });
 
 // ===================== STUDENT ROUTES =====================
-app.get('/students', (req, res) => {
-  const sql = 'SELECT * FROM students';
-  db.query(sql, (err, results) => {
-    if (err) return res.status(500).send('Server error');
-    res.json(results);
-  });
-});
-
 app.get('/students/email/:email', (req, res) => {
+  const email = req.params.email;
   const sql = 'SELECT * FROM students WHERE email = ?';
-  db.query(sql, [req.params.email], (err, results) => {
+  db.query(sql, [email], (err, results) => {
     if (err) return res.status(500).send('Server error');
     if (results.length === 0) return res.status(404).send('Student not found');
     res.json(results[0]);
@@ -74,8 +57,8 @@ app.get('/students/email/:email', (req, res) => {
 });
 
 app.post('/students/email/:email', (req, res) => {
-  const { fullName, mobile, batch } = req.body;
   const email = req.params.email;
+  const { fullName, mobile, batch } = req.body;
 
   const checkSql = 'SELECT * FROM students WHERE email = ?';
   db.query(checkSql, [email], (err, results) => {
@@ -97,18 +80,29 @@ app.post('/students/email/:email', (req, res) => {
   });
 });
 
+// ===================== ADMIN =====================
+app.get('/students', (req, res) => {
+  const sql = 'SELECT * FROM students';
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).send('Server error');
+    res.json(results);
+  });
+});
+
 app.put('/students/:id', (req, res) => {
+  const studentId = req.params.id;
   const { fullName, email, mobile, batch } = req.body;
   const sql = 'UPDATE students SET fullName = ?, email = ?, mobile = ?, batch = ? WHERE id = ?';
-  db.query(sql, [fullName, email, mobile, batch, req.params.id], (err) => {
+  db.query(sql, [fullName, email, mobile, batch, studentId], (err) => {
     if (err) return res.status(500).send('Error updating student');
     res.send('Student updated successfully');
   });
 });
 
 app.delete('/students/:id', (req, res) => {
+  const studentId = req.params.id;
   const sql = 'DELETE FROM students WHERE id = ?';
-  db.query(sql, [req.params.id], (err) => {
+  db.query(sql, [studentId], (err) => {
     if (err) return res.status(500).send('Error deleting student');
     res.send('Student deleted successfully');
   });
