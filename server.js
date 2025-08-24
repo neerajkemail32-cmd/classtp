@@ -5,32 +5,30 @@ const cors = require('cors');
 
 const app = express();
 
-// ======= Middleware =======
+// Middleware
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.static('public')); // serve HTML/CSS/JS
 
-// ======= MySQL Connection =======
+// MySQL connection (Render will inject env vars)
 const connection = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT || 3306,
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASS || '',
+  database: process.env.DB_NAME || 'tuition_db',
+  port: process.env.DB_PORT || 3306
 });
 
-// Test DB connection
 connection.connect((err) => {
   if (err) {
-    console.error('❌ MySQL connection failed:', err.message);
-    console.error('Make sure your DB credentials in Render are correct and the DB allows remote connections.');
-    process.exit(1); // stop app if DB is unreachable
+    console.error('❌ Error connecting to MySQL:', err.message);
+    process.exit(1);
   }
   console.log('✅ Connected to MySQL');
 });
 
-// ======= USER REGISTRATION =======
+// ===================== USER REGISTRATION =====================
 app.post('/register', (req, res) => {
   const { fullName, email, mobile, password } = req.body;
   const role = 'student';
@@ -45,7 +43,7 @@ app.post('/register', (req, res) => {
   });
 });
 
-// ======= LOGIN =======
+// ===================== LOGIN =====================
 app.post('/login', (req, res) => {
   const { email, password, role } = req.body;
 
@@ -61,7 +59,7 @@ app.post('/login', (req, res) => {
   });
 });
 
-// ======= STUDENT ROUTES =======
+// ===================== STUDENT ROUTES =====================
 app.get('/students/email/:email', (req, res) => {
   const email = req.params.email;
   const sql = 'SELECT * FROM students WHERE email = ?';
@@ -96,7 +94,7 @@ app.post('/students/email/:email', (req, res) => {
   });
 });
 
-// ======= ADMIN ROUTES =======
+// ===================== ADMIN =====================
 app.get('/students', (req, res) => {
   const sql = 'SELECT * FROM students';
   connection.query(sql, (err, results) => {
@@ -124,7 +122,7 @@ app.delete('/students/:id', (req, res) => {
   });
 });
 
-// ======= START SERVER =======
+// ===================== START SERVER =====================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
