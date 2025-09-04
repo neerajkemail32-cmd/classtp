@@ -1,159 +1,302 @@
-<script>
-  // 🔑 Set this once to your Render URL
-  const API_BASE = "https://classtp.onrender.com/"; // replace with your actual Render URL
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard | My Tuition Classes</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .main-container {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 5px;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
 
-  let allStudents = [];
+  <!-- Header -->
+  <div class="bg-dark text-white p-3">
+    <div class="container">
+      <h2>Admin Dashboard</h2>
+    </div>
+  </div>
 
-  // Open student management page
-  function openStudents() {
-    document.getElementById('mainMenu').classList.add('hidden');
-    document.getElementById('studentPage').classList.remove('hidden');
-  }
+  <!-- Main Content -->
+  <div class="main-container">
+    <!-- Main Menu -->
+    <div id="mainMenu">
+      <h3>Welcome Admin!</h3>
+      <p>Choose what you want to do:</p>
+      <hr>
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <div class="card">
+            <div class="card-body text-center">
+              <h5>Manage Students</h5>
+              <button class="btn btn-primary" onclick="openStudents()">Open</button>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="card">
+            <div class="card-body text-center">
+              <h5>Manage Classes</h5>
+              <button class="btn btn-secondary" disabled>Coming Soon</button>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="card">
+            <div class="card-body text-center">
+              <h5>View Reports</h5>
+              <button class="btn btn-secondary" disabled>Coming Soon</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  // Go back to main menu
-  function goBack() {
-    document.getElementById('studentPage').classList.add('hidden');
-    document.getElementById('mainMenu').classList.remove('hidden');
-  }
+    <!-- Student Management -->
+    <div id="studentPage" class="hidden">
+      <div class="mb-3">
+        <button class="btn btn-outline-secondary" onclick="goBack()">← Back</button>
+        <h3 class="d-inline ms-3">Student Management</h3>
+      </div>
+      <hr>
+      
+      <!-- Search -->
+      <div class="mb-4">
+        <h5>Search Students</h5>
+        <div class="row">
+          <div class="col-md-6">
+            <input type="text" class="form-control" id="searchBox" placeholder="Type name or email to search">
+          </div>
+          <div class="col-md-3">
+            <button class="btn btn-info" onclick="loadAllStudents()">Show All</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Add Student -->
+      <div class="mb-4">
+        <h5>Add New Student</h5>
+        <form id="studentForm">
+          <div class="row mb-2">
+            <div class="col-md-3">
+              <label>Full Name:</label>
+              <input type="text" class="form-control" id="name" required>
+            </div>
+            <div class="col-md-3">
+              <label>Email:</label>
+              <input type="email" class="form-control" id="email" required>
+            </div>
+            <div class="col-md-2">
+              <label>Mobile:</label>
+              <input type="text" class="form-control" id="mobile" required>
+            </div>
+            <div class="col-md-2">
+              <label>Batch:</label>
+              <input type="text" class="form-control" id="batch" required>
+            </div>
+            <div class="col-md-2">
+              <label>&nbsp;</label>
+              <button type="submit" class="btn btn-success form-control">Add</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      
+      <!-- Students List -->
+      <div>
+        <h5>Students List</h5>
+        <div class="table-responsive">
+          <table class="table table-bordered">
+            <thead class="table-dark">
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Mobile</th>
+                <th>Batch</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="studentsList">
+              <tr>
+                <td colspan="6" class="text-center">Click "Show All" to see students</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  // Load all students
-  function loadAllStudents() {
-    document.getElementById('studentsList').innerHTML = '<tr><td colspan="6" class="text-center">Loading...</td></tr>';
+  <!-- Scripts -->
+  <script>
+    // 🔑 Replace with your Render URL
+    const API_BASE = "https://classtp.onrender.com";
 
-    fetch(`${API_BASE}/students`)
-      .then(response => response.json())
-      .then(students => {
-        allStudents = students;
-        showStudents(students);
-      })
-      .catch(error => {
-        alert('Error loading students. Check server on Render!');
-        console.error(error);
-      });
-  }
+    let allStudents = [];
 
-  // Show students in table
-  function showStudents(students) {
-    const tbody = document.getElementById('studentsList');
-
-    if (students.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center">No students found</td></tr>';
-      return;
+    function openStudents() {
+      document.getElementById('mainMenu').classList.add('hidden');
+      document.getElementById('studentPage').classList.remove('hidden');
     }
 
-    tbody.innerHTML = students.map(student => `
-      <tr>
-        <td>${student.id}</td>
-        <td>${student.fullName}</td>
-        <td>${student.email}</td>
-        <td>${student.mobile}</td>
-        <td>${student.batch || 'N/A'}</td>
-        <td>
-          <button class="btn btn-sm btn-info me-1" onclick="viewStudent(${student.id})">View</button>
-          <button class="btn btn-sm btn-warning me-1" onclick="editStudent(${student.id})">Edit</button>
-          <button class="btn btn-sm btn-danger" onclick="deleteStudent(${student.id})">Delete</button>
-        </td>
-      </tr>
-    `).join('');
-  }
+    function goBack() {
+      document.getElementById('studentPage').classList.add('hidden');
+      document.getElementById('mainMenu').classList.remove('hidden');
+    }
 
-  // Search box
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('searchBox').addEventListener('input', function () {
-      const searchText = this.value.toLowerCase();
-      if (!allStudents.length) return;
-      if (!searchText) return showStudents(allStudents);
+    function loadAllStudents() {
+      document.getElementById('studentsList').innerHTML = '<tr><td colspan="6" class="text-center">Loading...</td></tr>';
+      
+      fetch(`${API_BASE}/students`)
+        .then(response => response.json())
+        .then(students => {
+          allStudents = students;
+          showStudents(students);
+        })
+        .catch(error => {
+          alert('Error loading students. Make sure server is running!');
+          console.log(error);
+        });
+    }
 
-      const filtered = allStudents.filter(s =>
-        s.fullName.toLowerCase().includes(searchText) ||
-        s.email.toLowerCase().includes(searchText)
-      );
-      showStudents(filtered);
+    function showStudents(students) {
+      const tbody = document.getElementById('studentsList');
+      
+      if (students.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">No students found</td></tr>';
+        return;
+      }
+
+      let html = '';
+      students.forEach(student => {
+        html += `
+          <tr>
+            <td>${student.id}</td>
+            <td>${student.fullName}</td>
+            <td>${student.email}</td>
+            <td>${student.mobile}</td>
+            <td>${student.batch || 'N/A'}</td>
+            <td>
+              <button class="btn btn-sm btn-info me-1" onclick="viewStudent(${student.id})">View</button>
+              <button class="btn btn-sm btn-warning me-1" onclick="editStudent(${student.id})">Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteStudent(${student.id})">Delete</button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('searchBox').addEventListener('input', function() {
+        const searchText = this.value.toLowerCase();
+        if (allStudents.length === 0) return;
+        if (searchText === '') {
+          showStudents(allStudents);
+          return;
+        }
+        const filtered = allStudents.filter(student => 
+          student.fullName.toLowerCase().includes(searchText) || 
+          student.email.toLowerCase().includes(searchText)
+        );
+        showStudents(filtered);
+      });
     });
-  });
 
-  // Add student
-  document.getElementById('studentForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-
-    const newStudent = {
-      fullName: document.getElementById('name').value,
-      email: document.getElementById('email').value,
-      mobile: document.getElementById('mobile').value,
-      batch: document.getElementById('batch').value,
-      password: '123456'
-    };
-
-    fetch(`${API_BASE}/students`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newStudent)
-    })
-      .then(r => {
-        if (r.ok) {
+    document.getElementById('studentForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const newStudent = {
+        fullName: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        mobile: document.getElementById('mobile').value,
+        batch: document.getElementById('batch').value,
+        password: '123456'
+      };
+      fetch(`${API_BASE}/students`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newStudent)
+      })
+      .then(response => {
+        if (response.ok) {
           alert('Student added successfully!');
-          this.reset();
+          document.getElementById('studentForm').reset();
           loadAllStudents();
         } else {
           alert('Error adding student!');
         }
       })
-      .catch(err => alert('Error: ' + err.message));
-  });
+      .catch(error => alert('Error: ' + error.message));
+    });
 
-  // View student
-  function viewStudent(id) {
-    const s = allStudents.find(st => st.id === id);
-    if (s) {
-      alert(`Student Details:
-Name: ${s.fullName}
-Email: ${s.email}
-Mobile: ${s.mobile}
-Batch: ${s.batch || 'Not assigned'}`);
+    function viewStudent(id) {
+      const student = allStudents.find(s => s.id === id);
+      if (student) {
+        alert(`Student Details:
+Name: ${student.fullName}
+Email: ${student.email}
+Mobile: ${student.mobile}
+Batch: ${student.batch || 'Not assigned'}`);
+      }
     }
-  }
 
-  // Edit student
-  function editStudent(id) {
-    const s = allStudents.find(st => st.id === id);
-    if (!s) return;
-
-    const updated = {
-      fullName: prompt('Enter new name:', s.fullName) || s.fullName,
-      email: prompt('Enter new email:', s.email) || s.email,
-      mobile: prompt('Enter new mobile:', s.mobile) || s.mobile,
-      batch: prompt('Enter new batch:', s.batch) || s.batch
-    };
-
-    fetch(`${API_BASE}/students/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updated)
-    })
-      .then(r => {
-        if (r.ok) {
+    function editStudent(id) {
+      const student = allStudents.find(s => s.id === id);
+      if (!student) return;
+      const newName = prompt('Enter new name:', student.fullName);
+      const newEmail = prompt('Enter new email:', student.email);
+      const newMobile = prompt('Enter new mobile:', student.mobile);
+      const newBatch = prompt('Enter new batch:', student.batch);
+      if (!newName || !newEmail || !newMobile || !newBatch) {
+        alert('All fields are required!');
+        return;
+      }
+      const updatedStudent = { fullName: newName, email: newEmail, mobile: newMobile, batch: newBatch };
+      fetch(`${API_BASE}/students/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedStudent)
+      })
+      .then(response => {
+        if (response.ok) {
           alert('Student updated successfully!');
           loadAllStudents();
         } else {
           alert('Error updating student!');
         }
       })
-      .catch(err => alert('Error: ' + err.message));
-  }
+      .catch(error => alert('Error: ' + error.message));
+    }
 
-  // Delete student
-  function deleteStudent(id) {
-    if (!confirm('Delete this student?')) return;
-
-    fetch(`${API_BASE}/students/${id}`, { method: 'DELETE' })
-      .then(r => {
-        if (r.ok) {
-          alert('Student deleted!');
+    function deleteStudent(id) {
+      if (!confirm('Are you sure you want to delete this student?')) return;
+      fetch(`${API_BASE}/students/${id}`, { method: 'DELETE' })
+      .then(response => {
+        if (response.ok) {
+          alert('Student deleted successfully!');
           loadAllStudents();
         } else {
           alert('Error deleting student!');
         }
       })
-      .catch(err => alert('Error: ' + err.message));
-  }
-</script>
+      .catch(error => alert('Error: ' + error.message));
+    }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
