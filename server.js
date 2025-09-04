@@ -191,9 +191,15 @@ app.get('/students/:id', (req, res) => {
 });
 
 // Get all fees for a student
+// Get fees for a student (with student details)
 app.get('/fees/student/:id', (req, res) => {
   const studentId = req.params.id;
-  const sql = 'SELECT * FROM fees WHERE studentId = ?';
+  const sql = `
+    SELECT f.id, f.amount, f.status, s.fullName AS studentName, s.batch 
+    FROM fees f
+    JOIN students s ON f.studentId = s.id
+    WHERE f.studentId = ?
+  `;
   db.query(sql, [studentId], (err, results) => {
     if (err) {
       console.error('❌ Error fetching fees:', err);
