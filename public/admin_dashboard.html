@@ -38,6 +38,7 @@
       <p>Choose what you want to do:</p>
       <hr>
       <div class="row">
+        <!-- Manage Students -->
         <div class="col-md-4 mb-3">
           <div class="card">
             <div class="card-body text-center">
@@ -46,14 +47,18 @@
             </div>
           </div>
         </div>
+
+        <!-- Manage Fees -->
         <div class="col-md-4 mb-3">
           <div class="card">
             <div class="card-body text-center">
-              <h5>Manage Classes</h5>
-              <button class="btn btn-secondary" disabled>Coming Soon</button>
+              <h5>Manage Fees</h5>
+              <a href="fees.html" class="btn btn-success">Open</a>
             </div>
           </div>
         </div>
+
+        <!-- View Reports (still coming soon) -->
         <div class="col-md-4 mb-3">
           <div class="card">
             <div class="card-body text-center">
@@ -143,8 +148,7 @@
 
   <!-- Scripts -->
   <script>
-    // 🔑 Replace with your Render URL
-    const API_BASE = "https://classtp.onrender.com";
+    const API_BASE = "https://classtp.onrender.com"; // 🔑 Replace with your Render URL
 
     let allStudents = [];
 

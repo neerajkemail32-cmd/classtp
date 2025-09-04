@@ -174,6 +174,54 @@ app.delete('/students/:id', (req, res) => {
         res.send('Student deleted successfully');
     });
 });
+// ===================== FEES ROUTES =====================
+
+// Get fees by student roll number
+app.get('/fees/student/:rollNo', (req, res) => {
+    const { rollNo } = req.params;
+    const query = `
+        SELECT f.id AS feeId, f.batch, f.amount, f.status, s.roll_no, s.fullName 
+        FROM fees f
+        JOIN students s ON f.studentId = s.id
+        WHERE s.roll_no = ?;
+    `;
+    db.query(query, [rollNo], (err, results) => {
+        if (err) {
+            console.error('❌ Error fetching fees:', err);
+            return res.status(500).json({ error: 'Server error' });
+        }
+        if (results.length === 0) {
+            console.log('❌ No fees found for roll no:', rollNo);
+            return res.status(404).send('No fees found for this student');
+        }
+        console.log('✅ Fees fetched for roll no:', rollNo);
+        res.json(results);
+    });
+});
+
+// Update fee status
+app.put('/fees/:id', (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!['Pending', 'Paid'].includes(status)) {
+        return res.status(400).json({ error: 'Invalid status value' });
+    }
+
+    const query = "UPDATE fees SET status = ? WHERE id = ?";
+    db.query(query, [status, id], (err, result) => {
+        if (err) {
+            console.error('❌ Error updating fee status:', err);
+            return res.status(500).json({ error: 'Server error' });
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Fee record not found' });
+        }
+        console.log(`✅ Fee ID ${id} updated to ${status}`);
+        res.json({ message: 'Fee status updated successfully' });
+    });
+});
+
 
 // ===================== GLOBAL ERROR HANDLING =====================
 process.on('unhandledRejection', (err) => {
