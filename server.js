@@ -59,6 +59,8 @@ app.post('/login', (req, res) => {
 });
 
 // ===================== STUDENT ROUTES =====================
+
+// Get student by email
 app.get('/students/email/:email', (req, res) => {
     const email = req.params.email;
     const sql = 'SELECT * FROM students WHERE email = ?';
@@ -76,6 +78,22 @@ app.get('/students/email/:email', (req, res) => {
     });
 });
 
+// Add new student (used by dashboard "Add Student" form)
+app.post('/students', (req, res) => {
+    const { fullName, email, mobile, batch } = req.body;
+
+    const sql = 'INSERT INTO students (fullName, email, mobile, batch) VALUES (?, ?, ?, ?)';
+    db.query(sql, [fullName, email, mobile, batch], (err, result) => {
+        if (err) {
+            console.error('❌ Error inserting student:', err);
+            return res.status(500).send('Failed to add student');
+        }
+        console.log('✅ Student added:', email);
+        res.send('Student added successfully');
+    });
+});
+
+// Insert or update student by email (optional, keep for flexibility)
 app.post('/students/email/:email', (req, res) => {
     const email = req.params.email;
     const { fullName, mobile, batch } = req.body;
@@ -113,7 +131,7 @@ app.post('/students/email/:email', (req, res) => {
     });
 });
 
-// ===================== ADMIN ROUTES =====================
+// Get all students
 app.get('/students', (req, res) => {
     const sql = 'SELECT * FROM students';
     db.query(sql, (err, results) => {
@@ -126,6 +144,7 @@ app.get('/students', (req, res) => {
     });
 });
 
+// Update student by ID
 app.put('/students/:id', (req, res) => {
     const studentId = req.params.id;
     const { fullName, email, mobile, batch } = req.body;
@@ -141,6 +160,7 @@ app.put('/students/:id', (req, res) => {
     });
 });
 
+// Delete student by ID
 app.delete('/students/:id', (req, res) => {
     const studentId = req.params.id;
 
