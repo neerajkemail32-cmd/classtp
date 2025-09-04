@@ -46,8 +46,6 @@ app.post('/login', (req, res) => {
             return res.status(500).send('Server error');
         }
 
-        console.log('Login query results:', results);
-
         if (results.length > 0) {
             console.log('✅ Login successful for:', email);
             res.json({ success: true, role: results[0].role, email: results[0].email });
@@ -70,64 +68,22 @@ app.get('/students/email/:email', (req, res) => {
             return res.status(500).send('Server error');
         }
         if (results.length === 0) {
-            console.log('❌ Student not found:', email);
             return res.status(404).send('Student not found');
         }
-        console.log('✅ Student fetched:', email);
         res.json(results[0]);
     });
 });
 
-// Add new student (used by dashboard "Add Student" form)
+// Add new student
 app.post('/students', (req, res) => {
     const { fullName, email, mobile, batch } = req.body;
-
     const sql = 'INSERT INTO students (fullName, email, mobile, batch) VALUES (?, ?, ?, ?)';
-    db.query(sql, [fullName, email, mobile, batch], (err, result) => {
+    db.query(sql, [fullName, email, mobile, batch], (err) => {
         if (err) {
             console.error('❌ Error inserting student:', err);
             return res.status(500).send('Failed to add student');
         }
-        console.log('✅ Student added:', email);
-        res.send('Student added successfully');
-    });
-});
-
-// Insert or update student by email (optional, keep for flexibility)
-app.post('/students/email/:email', (req, res) => {
-    const email = req.params.email;
-    const { fullName, mobile, batch } = req.body;
-
-    console.log(`[STUDENT POST] Email: ${email}, Data:`, req.body);
-
-    const checkSql = 'SELECT * FROM students WHERE email = ?';
-    db.query(checkSql, [email], (err, results) => {
-        if (err) {
-            console.error('❌ Error checking student:', err);
-            return res.status(500).send('Server error');
-        }
-
-        if (results.length > 0) {
-            const updateSql = 'UPDATE students SET fullName = ?, mobile = ?, batch = ? WHERE email = ?';
-            db.query(updateSql, [fullName, mobile, batch, email], (err2) => {
-                if (err2) {
-                    console.error('❌ Failed to update student:', err2);
-                    return res.status(500).send('Failed to update student');
-                }
-                console.log('✅ Student updated:', email);
-                res.send('Student updated successfully');
-            });
-        } else {
-            const insertSql = 'INSERT INTO students (fullName, email, mobile, batch) VALUES (?, ?, ?, ?)';
-            db.query(insertSql, [fullName, email, mobile, batch], (err3) => {
-                if (err3) {
-                    console.error('❌ Failed to insert student:', err3);
-                    return res.status(500).send('Failed to insert student');
-                }
-                console.log('✅ Student added:', email);
-                res.send('Student added successfully');
-            });
-        }
+        res.send('✅ Student added successfully');
     });
 });
 
@@ -139,7 +95,6 @@ app.get('/students', (req, res) => {
             console.error('❌ Error fetching all students:', err);
             return res.status(500).send('Server error');
         }
-        console.log('✅ Fetched all students');
         res.json(results);
     });
 });
@@ -148,95 +103,62 @@ app.get('/students', (req, res) => {
 app.put('/students/:id', (req, res) => {
     const studentId = req.params.id;
     const { fullName, email, mobile, batch } = req.body;
-
     const sql = 'UPDATE students SET fullName = ?, email = ?, mobile = ?, batch = ? WHERE id = ?';
     db.query(sql, [fullName, email, mobile, batch, studentId], (err) => {
         if (err) {
             console.error('❌ Error updating student:', err);
             return res.status(500).send('Error updating student');
         }
-        console.log('✅ Student updated with ID:', studentId);
-        res.send('Student updated successfully');
+        res.send('✅ Student updated successfully');
     });
 });
 
 // Delete student by ID
 app.delete('/students/:id', (req, res) => {
     const studentId = req.params.id;
-
     const sql = 'DELETE FROM students WHERE id = ?';
     db.query(sql, [studentId], (err) => {
         if (err) {
             console.error('❌ Error deleting student:', err);
             return res.status(500).send('Error deleting student');
         }
-        console.log('✅ Student deleted with ID:', studentId);
-        res.send('Student deleted successfully');
+        res.send('✅ Student deleted successfully');
     });
 });
+
 // ===================== FEES ROUTES =====================
 
-// Get student by ID
-app.get('/students/:id', (req, res) => {
-  const studentId = req.params.id;
-  const sql = 'SELECT * FROM students WHERE id = ?';
-  db.query(sql, [studentId], (err, results) => {
-    if (err) {
-      console.error('❌ Error fetching student:', err);
-      return res.status(500).send('Server error');
-    }
-    if (results.length === 0) return res.status(404).send('Student not found');
-    res.json(results[0]);
-  });
-});
-
-// Get all fees for a student
 // Get fees for a student (with student details)
 app.get('/fees/student/:id', (req, res) => {
-  const studentId = req.params.id;
-  const sql = `
-    SELECT f.id, f.amount, f.status, s.fullName AS studentName, s.batch 
-    FROM fees f
-    JOIN students s ON f.studentId = s.id
-    WHERE f.studentId = ?
-  `;
-  db.query(sql, [studentId], (err, results) => {
-    if (err) {
-      console.error('❌ Error fetching fees:', err);
-      return res.status(500).send('Server error');
-    }
-    res.json(results);
-  });
+    const studentId = req.params.id;
+    const sql = `
+      SELECT f.id, f.amount, f.status, s.fullName AS studentName, s.batch 
+      FROM fees f
+      JOIN students s ON f.studentId = s.id
+      WHERE f.studentId = ?
+    `;
+    db.query(sql, [studentId], (err, results) => {
+        if (err) {
+            console.error('❌ Error fetching fees:', err);
+            return res.status(500).send('Server error');
+        }
+        res.json(results);
+    });
 });
 
 // Update fee status
 app.put('/fees/:id', (req, res) => {
-  const feeId = req.params.id;
-  const { status } = req.body;
-  const sql = 'UPDATE fees SET status = ? WHERE id = ?';
-  db.query(sql, [status, feeId], (err) => {
-    if (err) {
-      console.error('❌ Error updating fee:', err);
-      return res.status(500).send('Server error');
-    }
-    res.send('Fee status updated successfully');
-  });
+    const feeId = req.params.id;
+    const { status } = req.body;
+    const sql = 'UPDATE fees SET status = ? WHERE id = ?';
+    db.query(sql, [status, feeId], (err) => {
+        if (err) {
+            console.error('❌ Error updating fee:', err);
+            return res.status(500).send('Server error');
+        }
+        res.send('✅ Fee status updated successfully');
+    });
 });
-
-// Delete a fee record
-app.delete('/fees/:id', (req, res) => {
-  const feeId = req.params.id;
-  const sql = 'DELETE FROM fees WHERE id = ?';
-  db.query(sql, [feeId], (err) => {
-    if (err) {
-      console.error('❌ Error deleting fee:', err);
-      return res.status(500).send('Server error');
-    }
-    res.send('Fee deleted successfully');
-  });
-});
-
-
 
 // ===================== GLOBAL ERROR HANDLING =====================
 process.on('unhandledRejection', (err) => {

@@ -12,30 +12,27 @@
 
     <!-- Search Student -->
     <div class="mb-4">
-      <h5>Search Student</h5>
       <div class="input-group">
         <input type="number" class="form-control" id="feesSearch" placeholder="Enter Student ID">
         <button class="btn btn-primary" onclick="searchFees()">Search</button>
       </div>
     </div>
 
-    <!-- Fees Info -->
-    <div id="feesInfo" class="card shadow-sm" style="display:none;">
-      <div class="card-body">
-        <h5 id="studentName"></h5>
-        <p><strong>Batch:</strong> <span id="studentBatch"></span></p>
-        <p><strong>Amount:</strong> ₹<span id="feeAmount"></span></p>
-        <p>
-          <strong>Status:</strong>
-          <select id="feeStatus" class="form-select d-inline w-auto" onchange="updateFeeStatus()">
-            <option value="Pending">Pending</option>
-            <option value="Paid">Paid</option>
-          </select>
-        </p>
-      </div>
+    <!-- Student Fees Info -->
+    <div id="feesInfo" class="card shadow-sm p-3" style="display:none;">
+      <h5 id="studentName"></h5>
+      <p><strong>Batch:</strong> <span id="studentBatch"></span></p>
+      <p><strong>Amount:</strong> ₹<span id="feeAmount"></span></p>
+      <p>
+        <strong>Status:</strong>
+        <select id="feeStatus" class="form-select d-inline w-auto" onchange="updateFeeStatus()">
+          <option value="Pending">Pending</option>
+          <option value="Paid">Paid</option>
+        </select>
+      </p>
     </div>
 
-    <div id="noFees" class="alert alert-warning" style="display:none;">
+    <div id="noFees" class="alert alert-warning mt-3" style="display:none;">
       No fees record found for this student.
     </div>
   </div>
@@ -43,7 +40,6 @@
   <script>
     let currentFeeId = null;
 
-    // Search student by ID and load fees
     function searchFees() {
       const studentId = document.getElementById('feesSearch').value.trim();
       if (!studentId) {
@@ -60,7 +56,7 @@
             return;
           }
 
-          const fee = fees[0]; // show first fee record
+          const fee = fees[0]; // take first fee record
           currentFeeId = fee.id;
 
           document.getElementById('studentName').innerText = fee.studentName;
@@ -77,8 +73,8 @@
         });
     }
 
-    // Update fee status
     function updateFeeStatus() {
+      if (!currentFeeId) return;
       const newStatus = document.getElementById('feeStatus').value;
 
       fetch(`/fees/${currentFeeId}`, {
