@@ -1,157 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Fees Management | My Tuition Classes</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <style>
-    body { background-color: #f8f9fa; }
-    .main-container {
-      max-width: 900px;
-      margin: 20px auto;
-      padding: 20px;
-      background: white;
-      border-radius: 5px;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manage Fees | Admin Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-
-  <!-- Header -->
-  <div class="bg-dark text-white p-3">
-    <div class="container">
-      <h2>Fees Management</h2>
-    </div>
-  </div>
-
-  <!-- Main Content -->
-  <div class="main-container">
+<body class="bg-light">
+  <div class="container py-4">
+    <h2 class="mb-4">Manage Fees</h2>
 
     <!-- Search Student -->
     <div class="mb-4">
-      <h5>Search Student by Roll No</h5>
+      <h5>Search Student</h5>
       <div class="input-group">
-        <input type="text" class="form-control" id="feesSearch" placeholder="Enter student roll number (e.g., 1-J)">
+        <input type="number" class="form-control" id="feesSearch" placeholder="Enter Student ID">
         <button class="btn btn-primary" onclick="searchFees()">Search</button>
       </div>
     </div>
 
-    <!-- Fees List -->
-    <div>
-      <h5>Fees Records</h5>
-      <div class="table-responsive">
-        <table class="table table-bordered">
-          <thead class="table-dark">
-            <tr>
-              <th>Fee ID</th>
-              <th>Student</th>
-              <th>Batch</th>
-              <th>Amount</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="feesList">
-            <tr><td colspan="6" class="text-center">Search a student to view fees</td></tr>
-          </tbody>
-        </table>
-      </div>
+    <!-- Student Info -->
+    <div id="studentInfo" class="mb-3" style="display:none;">
+      <h5>Student Info</h5>
+      <p><strong>Name:</strong> <span id="sName"></span></p>
+      <p><strong>Email:</strong> <span id="sEmail"></span></p>
+      <p><strong>Batch:</strong> <span id="sBatch"></span></p>
     </div>
+
+    <!-- Fees Table -->
+    <table class="table table-bordered table-striped">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Batch</th>
+          <th>Amount</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="feesList">
+        <tr><td colspan="5" class="text-center">Search for a student...</td></tr>
+      </tbody>
+    </table>
   </div>
 
   <script>
-    let currentRollNo = null;
+    let currentStudent = null;
 
-    // Search fees by roll number
+    // Search student by ID
     function searchFees() {
-      const rollNo = document.getElementById('feesSearch').value.trim();
-      if (!rollNo) {
-        alert('Enter roll number first!');
+      const studentId = document.getElementById('feesSearch').value.trim();
+      if (!studentId) {
+        alert('Enter Student ID first!');
         return;
       }
 
-      currentRollNo = rollNo;
-      loadFees(rollNo);
-    }
-
-    // Load fees for a student
-    function loadFees(rollNo) {
-      fetch(`/fees/student/${rollNo}`)
+      fetch(`/students/${studentId}`)
         .then(res => {
-          if (!res.ok) throw new Error('No fees found for this roll number');
+          if (!res.ok) throw new Error('Student not found');
           return res.json();
         })
-        .then(fees => showFees(fees))
+        .then(student => {
+          currentStudent = student;
+
+          // Show student info
+          document.getElementById('studentInfo').style.display = 'block';
+          document.getElementById('sName').innerText = student.fullName;
+          document.getElementById('sEmail').innerText = student.email;
+          document.getElementById('sBatch').innerText = student.batch;
+
+          loadFees(student.id);
+        })
         .catch(err => {
-          console.error(err);
+          alert(err.message);
+          document.getElementById('studentInfo').style.display = 'none';
           document.getElementById('feesList').innerHTML =
-            '<tr><td colspan="6" class="text-center">No fees found</td></tr>';
+            '<tr><td colspan="5" class="text-center">Student not found</td></tr>';
         });
     }
 
-    // Show fees with dropdown status
-    function showFees(fees) {
-      const tbody = document.getElementById('feesList');
-      if (fees.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center">No fees found</td></tr>';
-        return;
-      }
-
-      let html = '';
-      fees.forEach(fee => {
-        html += `
-          <tr>
-            <td>${fee.feeId}</td>
-            <td>${fee.fullName} (${fee.roll_no})</td>
-            <td>${fee.batch}</td>
-            <td>${fee.amount}</td>
-            <td>
-              <select class="form-select form-select-sm" onchange="updateStatus(${fee.feeId}, this.value)">
-                <option value="Paid" ${fee.status === 'Paid' ? 'selected' : ''}>Paid</option>
-                <option value="Pending" ${fee.status === 'Pending' ? 'selected' : ''}>Pending</option>
-              </select>
-            </td>
-            <td>
-              <button class="btn btn-sm btn-danger" onclick="deleteFee(${fee.feeId})">Delete</button>
-            </td>
-          </tr>
-        `;
-      });
-      tbody.innerHTML = html;
+    // Load fees for student
+    function loadFees(studentId) {
+      fetch(`/fees/student/${studentId}`)
+        .then(res => res.json())
+        .then(fees => {
+          let html = '';
+          if (fees.length === 0) {
+            html = '<tr><td colspan="5" class="text-center">No fees found</td></tr>';
+          } else {
+            fees.forEach(fee => {
+              html += `
+                <tr>
+                  <td>${fee.id}</td>
+                  <td>${fee.batch}</td>
+                  <td>${fee.amount}</td>
+                  <td>
+                    <select onchange="updateFeeStatus(${fee.id}, this.value)" class="form-select">
+                      <option value="Pending" ${fee.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                      <option value="Paid" ${fee.status === 'Paid' ? 'selected' : ''}>Paid</option>
+                    </select>
+                  </td>
+                  <td>
+                    <button class="btn btn-danger btn-sm" onclick="deleteFee(${fee.id})">Delete</button>
+                  </td>
+                </tr>
+              `;
+            });
+          }
+          document.getElementById('feesList').innerHTML = html;
+        });
     }
 
-    // Update status instantly
-    function updateStatus(id, newStatus) {
-      fetch(`/fees/${id}`, {
+    // Update fee status
+    function updateFeeStatus(feeId, newStatus) {
+      fetch(`/fees/${feeId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ status: newStatus })
       })
       .then(res => {
-        if (res.ok) {
-          console.log(`✅ Fee ${id} updated to ${newStatus}`);
-        } else {
-          alert('Error updating status');
-        }
+        if (!res.ok) throw new Error('Failed to update');
+        return res.text();
       })
-      .catch(err => console.error(err));
+      .then(msg => alert(msg))
+      .catch(err => alert(err.message));
     }
 
-    // Delete fee record
-    function deleteFee(id) {
-      if (!confirm('Delete this fee record?')) return;
+    // Delete fee
+    function deleteFee(feeId) {
+      if (!confirm('Are you sure you want to delete this fee record?')) return;
 
-      fetch(`/fees/${id}`, { method: 'DELETE' })
-      .then(res => {
-        if (res.ok) {
-          alert('Fee deleted!');
-          if (currentRollNo) loadFees(currentRollNo);
-        }
-      });
+      fetch(`/fees/${feeId}`, { method: 'DELETE' })
+        .then(res => res.text())
+        .then(msg => {
+          alert(msg);
+          if (currentStudent) loadFees(currentStudent.id);
+        });
     }
   </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

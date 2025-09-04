@@ -176,51 +176,60 @@ app.delete('/students/:id', (req, res) => {
 });
 // ===================== FEES ROUTES =====================
 
-// Get fees by student roll number
-app.get('/fees/student/:rollNo', (req, res) => {
-    const { rollNo } = req.params;
-    const query = `
-        SELECT f.id AS feeId, f.batch, f.amount, f.status, s.roll_no, s.fullName 
-        FROM fees f
-        JOIN students s ON f.studentId = s.id
-        WHERE s.roll_no = ?;
-    `;
-    db.query(query, [rollNo], (err, results) => {
-        if (err) {
-            console.error('❌ Error fetching fees:', err);
-            return res.status(500).json({ error: 'Server error' });
-        }
-        if (results.length === 0) {
-            console.log('❌ No fees found for roll no:', rollNo);
-            return res.status(404).send('No fees found for this student');
-        }
-        console.log('✅ Fees fetched for roll no:', rollNo);
-        res.json(results);
-    });
+// Get student by ID
+app.get('/students/:id', (req, res) => {
+  const studentId = req.params.id;
+  const sql = 'SELECT * FROM students WHERE id = ?';
+  db.query(sql, [studentId], (err, results) => {
+    if (err) {
+      console.error('❌ Error fetching student:', err);
+      return res.status(500).send('Server error');
+    }
+    if (results.length === 0) return res.status(404).send('Student not found');
+    res.json(results[0]);
+  });
+});
+
+// Get all fees for a student
+app.get('/fees/student/:id', (req, res) => {
+  const studentId = req.params.id;
+  const sql = 'SELECT * FROM fees WHERE studentId = ?';
+  db.query(sql, [studentId], (err, results) => {
+    if (err) {
+      console.error('❌ Error fetching fees:', err);
+      return res.status(500).send('Server error');
+    }
+    res.json(results);
+  });
 });
 
 // Update fee status
 app.put('/fees/:id', (req, res) => {
-    const { id } = req.params;
-    const { status } = req.body;
-
-    if (!['Pending', 'Paid'].includes(status)) {
-        return res.status(400).json({ error: 'Invalid status value' });
+  const feeId = req.params.id;
+  const { status } = req.body;
+  const sql = 'UPDATE fees SET status = ? WHERE id = ?';
+  db.query(sql, [status, feeId], (err) => {
+    if (err) {
+      console.error('❌ Error updating fee:', err);
+      return res.status(500).send('Server error');
     }
-
-    const query = "UPDATE fees SET status = ? WHERE id = ?";
-    db.query(query, [status, id], (err, result) => {
-        if (err) {
-            console.error('❌ Error updating fee status:', err);
-            return res.status(500).json({ error: 'Server error' });
-        }
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'Fee record not found' });
-        }
-        console.log(`✅ Fee ID ${id} updated to ${status}`);
-        res.json({ message: 'Fee status updated successfully' });
-    });
+    res.send('Fee status updated successfully');
+  });
 });
+
+// Delete a fee record
+app.delete('/fees/:id', (req, res) => {
+  const feeId = req.params.id;
+  const sql = 'DELETE FROM fees WHERE id = ?';
+  db.query(sql, [feeId], (err) => {
+    if (err) {
+      console.error('❌ Error deleting fee:', err);
+      return res.status(500).send('Server error');
+    }
+    res.send('Fee deleted successfully');
+  });
+});
+
 
 
 // ===================== GLOBAL ERROR HANDLING =====================
