@@ -6,246 +6,340 @@
   <title>Admin Dashboard | My Tuition Classes</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <style>
+    /* Very simple styles */
     body {
-      background-color: #f4f6f9;
+      background-color: #f8f9fa;
     }
-    .dashboard-box {
-      background: #fff;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      margin-top: 40px;
+    
+    .main-container {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 5px;
+    }
+    
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
 
-  <!-- Navbar -->
-  <nav class="navbar navbar-dark bg-dark">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">Admin Dashboard</a>
-      <a href="login.html" class="btn btn-outline-light">Logout</a>
+  <!-- Simple Header -->
+  <div class="bg-dark text-white p-3">
+    <div class="container">
+      <h2>Admin Dashboard</h2>
     </div>
-  </nav>
+  </div>
 
-  <!-- Main Dashboard -->
-  <div class="container">
-    <div class="dashboard-box mt-4">
-      <h3>Welcome, Admin!</h3>
-      <p class="text-muted">Manage classes, students, and more from here.</p>
+  <!-- Main Content -->
+  <div class="main-container">
+    
+    <!-- Main Menu -->
+    <div id="mainMenu">
+      <h3>Welcome Admin!</h3>
+      <p>Choose what you want to do:</p>
       <hr>
-
-      <div class="row g-4">
-        <div class="col-md-4">
-          <div class="card shadow-sm">
+      
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <div class="card">
             <div class="card-body text-center">
-              <h5 class="card-title">Manage Students</h5>
-              <button class="btn btn-primary" onclick="toggleStudentManagement()">Open</button>
+              <h5>Manage Students</h5>
+              <button class="btn btn-primary" onclick="openStudents()">Open</button>
             </div>
           </div>
         </div>
-        <div class="col-md-4">
-          <div class="card shadow-sm">
+        
+        <div class="col-md-4 mb-3">
+          <div class="card">
             <div class="card-body text-center">
-              <h5 class="card-title">Manage Classes</h5>
-             <a href="#" class="btn btn-primary" onclick="alert('work in progress')">Go</a>
+              <h5>Manage Classes</h5>
+              <button class="btn btn-secondary" disabled>Coming Soon</button>
             </div>
           </div>
         </div>
-        <div class="col-md-4">
-          <div class="card shadow-sm">
+        
+        <div class="col-md-4 mb-3">
+          <div class="card">
             <div class="card-body text-center">
-              <h5 class="card-title">Attendance Records</h5>
-              <a href="#" class="btn btn-primary">Go</a>
+              <h5>View Reports</h5>
+              <button class="btn btn-secondary" disabled>Coming Soon</button>
             </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Manage Students Section -->
-      <div id="studentSection" style="display:none; margin-top: 40px;">
-        <h4>Manage Students</h4>
-        <form id="addStudentForm" class="row g-3 mt-3">
-          <div class="col-md-3">
-            <input type="text" class="form-control" id="fullName" placeholder="Full Name" required />
+    <!-- Student Management Page -->
+    <div id="studentPage" class="hidden">
+      <div class="mb-3">
+        <button class="btn btn-outline-secondary" onclick="goBack()">← Back</button>
+        <h3 class="d-inline ms-3">Student Management</h3>
+      </div>
+      <hr>
+      
+      <!-- Search Box -->
+      <div class="mb-4">
+        <h5>Search Students</h5>
+        <div class="row">
+          <div class="col-md-6">
+            <input type="text" class="form-control" id="searchBox" placeholder="Type name or email to search">
           </div>
           <div class="col-md-3">
-            <input type="email" class="form-control" id="email" placeholder="Email" required />
+            <button class="btn btn-info" onclick="loadAllStudents()">Show All</button>
           </div>
-          <div class="col-md-2">
-            <input type="text" class="form-control" id="mobile" placeholder="Mobile" required />
-          </div>
-          <div class="col-md-2">
-            <input type="text" class="form-control" id="batch" placeholder="Batch" required />
-          </div>
-          <div class="col-md-2">
-            <button type="submit" class="btn btn-success w-100">Add Student</button>
+        </div>
+      </div>
+      
+      <!-- Add Student Form -->
+      <div class="mb-4">
+        <h5>Add New Student</h5>
+        <form id="studentForm">
+          <div class="row mb-2">
+            <div class="col-md-3">
+              <label>Full Name:</label>
+              <input type="text" class="form-control" id="name" required>
+            </div>
+            <div class="col-md-3">
+              <label>Email:</label>
+              <input type="email" class="form-control" id="email" required>
+            </div>
+            <div class="col-md-2">
+              <label>Mobile:</label>
+              <input type="text" class="form-control" id="mobile" required>
+            </div>
+            <div class="col-md-2">
+              <label>Batch:</label>
+              <input type="text" class="form-control" id="batch" required>
+            </div>
+            <div class="col-md-2">
+              <label>&nbsp;</label>
+              <button type="submit" class="btn btn-success form-control">Add</button>
+            </div>
           </div>
         </form>
-
-        <hr>
-
-        <!-- Search Bar -->
-        <div class="input-group mb-3 mt-2">
-          <input type="text" class="form-control" id="searchInput" placeholder="Search student by name or email">
-          <button class="btn btn-outline-secondary" onclick="searchStudent()">Search</button>
+      </div>
+      
+      <!-- Students List -->
+      <div>
+        <h5>Students List</h5>
+        <div class="table-responsive">
+          <table class="table table-bordered">
+            <thead class="table-dark">
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Mobile</th>
+                <th>Batch</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="studentsList">
+              <tr>
+                <td colspan="6" class="text-center">Click "Show All" to see students</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-
-        <!-- Student Table -->
-        <table class="table table-bordered table-striped mt-3">
-          <thead class="table-dark">
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Mobile</th>
-              <th>Batch</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="studentTableBody">
-            <!-- Students will be inserted dynamically here -->
-          </tbody>
-        </table>
       </div>
     </div>
   </div>
 
+  <!-- Simple JavaScript -->
   <script>
-    function toggleStudentManagement() {
-      const section = document.getElementById('studentSection');
-      section.style.display = section.style.display === 'none' ? 'block' : 'none';
+    let allStudents = [];
+
+    // Open student management page
+    function openStudents() {
+      document.getElementById('mainMenu').classList.add('hidden');
+      document.getElementById('studentPage').classList.remove('hidden');
     }
 
-    async function renderStudents() {
-      try {
-        const res = await fetch('http://localhost:3000/students');
-        const students = await res.json();
+    // Go back to main menu
+    function goBack() {
+      document.getElementById('studentPage').classList.add('hidden');
+      document.getElementById('mainMenu').classList.remove('hidden');
+    }
 
-        const tbody = document.getElementById('studentTableBody');
-        tbody.innerHTML = '';
-
-        students.forEach((student) => {
-          const row = `
-            <tr id="studentRow-${student.id}"
-                data-fullname="${student.fullName}"
-                data-email="${student.email}"
-                data-mobile="${student.mobile}"
-                data-batch="${student.batch}">
-              <td>${student.id}</td>
-              <td>${student.fullName}</td>
-              <td>${student.email}</td>
-              <td>${student.mobile}</td>
-              <td>${student.batch || '-'}</td>
-              <td>
-                <button class="btn btn-info btn-sm" onclick="viewDetails(${student.id})">Details</button>
-                <button class="btn btn-warning btn-sm" onclick="editStudent(${student.id})">Edit</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteStudent(${student.id})">Delete</button>
-              </td>
-            </tr>`;
-          tbody.innerHTML += row;
+    // Load all students from server
+    function loadAllStudents() {
+      document.getElementById('studentsList').innerHTML = '<tr><td colspan="6" class="text-center">Loading...</td></tr>';
+      
+      fetch('http://localhost:3000/students')
+        .then(response => response.json())
+        .then(students => {
+          allStudents = students;
+          showStudents(students);
+        })
+        .catch(error => {
+          alert('Error loading students. Make sure server is running!');
+          console.log(error);
         });
-      } catch (err) {
-        console.error('Error loading students:', err);
-      }
     }
 
-    function searchStudent() {
-      const keyword = document.getElementById('searchInput').value.toLowerCase();
-      const rows = document.querySelectorAll('#studentTableBody tr');
-
-      rows.forEach(row => {
-        const name = row.dataset.fullname.toLowerCase();
-        const email = row.dataset.email.toLowerCase();
-        row.style.display = (name.includes(keyword) || email.includes(keyword)) ? '' : 'none';
-      });
-    }
-
-    function viewDetails(id) {
-      alert('🔍 View details feature is under development.');
-    }
-
-    async function deleteStudent(id) {
-      if (!confirm('Are you sure you want to delete this student?')) return;
-      try {
-        const res = await fetch(`http://localhost:3000/students/${id}`, {
-          method: 'DELETE'
-        });
-        if (res.ok) {
-          alert('✅ Student deleted successfully');
-          renderStudents();
-        } else {
-          alert('❌ Failed to delete student');
-        }
-      } catch (err) {
-        console.error('Error deleting student:', err);
-      }
-    }
-
-    async function editStudent(id) {
-      const row = document.querySelector(`#studentRow-${id}`);
-      const fullName = prompt('Enter full name:', row.dataset.fullname);
-      const email = prompt('Enter email:', row.dataset.email);
-      const mobile = prompt('Enter mobile:', row.dataset.mobile);
-      const batch = prompt('Enter batch:', row.dataset.batch);
-
-      if (!fullName || !email || !mobile || !batch) {
-        alert('All fields are required');
+    // Show students in table
+    function showStudents(students) {
+      const tbody = document.getElementById('studentsList');
+      
+      if (students.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">No students found</td></tr>';
         return;
       }
 
-      try {
-        const res = await fetch(`http://localhost:3000/students/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fullName, email, mobile, batch })
-        });
-
-        if (res.ok) {
-          alert('✅ Student updated successfully');
-          renderStudents();
-        } else {
-          alert('❌ Failed to update student');
-        }
-      } catch (err) {
-        console.error('Error updating student:', err);
-      }
+      let html = '';
+      students.forEach(student => {
+        html += `
+          <tr>
+            <td>${student.id}</td>
+            <td>${student.fullName}</td>
+            <td>${student.email}</td>
+            <td>${student.mobile}</td>
+            <td>${student.batch || 'N/A'}</td>
+            <td>
+              <button class="btn btn-sm btn-info me-1" onclick="viewStudent(${student.id})">View</button>
+              <button class="btn btn-sm btn-warning me-1" onclick="editStudent(${student.id})">Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteStudent(${student.id})">Delete</button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
     }
 
-    document.getElementById('addStudentForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
+    // Search students as user types
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('searchBox').addEventListener('input', function() {
+        const searchText = this.value.toLowerCase();
+        
+        if (allStudents.length === 0) {
+          return; // No students loaded yet
+        }
+        
+        if (searchText === '') {
+          showStudents(allStudents);
+          return;
+        }
 
+        const filtered = allStudents.filter(student => 
+          student.fullName.toLowerCase().includes(searchText) || 
+          student.email.toLowerCase().includes(searchText)
+        );
+        
+        showStudents(filtered);
+      });
+    });
+
+    // Add new student
+    document.getElementById('studentForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
       const newStudent = {
-        fullName: document.getElementById('fullName').value,
+        fullName: document.getElementById('name').value,
         email: document.getElementById('email').value,
         mobile: document.getElementById('mobile').value,
         batch: document.getElementById('batch').value,
         password: '123456'
       };
 
-      try {
-       
-       const res = await fetch(`http://localhost:3000/students/email/${newStudent.email}`, {
-
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newStudent)
-        });
-
-        if (res.ok) {
-          alert('✅ Student added successfully');
-          this.reset();
-          renderStudents();
+      fetch('http://localhost:3000/students', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newStudent)
+      })
+      .then(response => {
+        if (response.ok) {
+          alert('Student added successfully!');
+          document.getElementById('studentForm').reset();
+          loadAllStudents(); // Refresh list
         } else {
-          const msg = await res.text();
-          alert('❌ Error: ' + msg);
+          alert('Error adding student!');
         }
-      } catch (err) {
-        console.error('Error adding student:', err);
-      }
+      })
+      .catch(error => {
+        alert('Error: ' + error.message);
+      });
     });
 
-    renderStudents();
+    // View student details
+    function viewStudent(id) {
+      const student = allStudents.find(s => s.id === id);
+      if (student) {
+        alert(`Student Details:
+Name: ${student.fullName}
+Email: ${student.email}
+Mobile: ${student.mobile}
+Batch: ${student.batch || 'Not assigned'}`);
+      }
+    }
+
+    // Edit student
+    function editStudent(id) {
+      const student = allStudents.find(s => s.id === id);
+      if (!student) return;
+
+      const newName = prompt('Enter new name:', student.fullName);
+      const newEmail = prompt('Enter new email:', student.email);
+      const newMobile = prompt('Enter new mobile:', student.mobile);
+      const newBatch = prompt('Enter new batch:', student.batch);
+
+      if (!newName || !newEmail || !newMobile || !newBatch) {
+        alert('All fields are required!');
+        return;
+      }
+
+      const updatedStudent = {
+        fullName: newName,
+        email: newEmail,
+        mobile: newMobile,
+        batch: newBatch
+      };
+
+      fetch(`http://localhost:3000/students/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedStudent)
+      })
+      .then(response => {
+        if (response.ok) {
+          alert('Student updated successfully!');
+          loadAllStudents();
+        } else {
+          alert('Error updating student!');
+        }
+      })
+      .catch(error => {
+        alert('Error: ' + error.message);
+      });
+    }
+
+    // Delete student
+    function deleteStudent(id) {
+      if (!confirm('Are you sure you want to delete this student?')) {
+        return;
+      }
+
+      fetch(`http://localhost:3000/students/${id}`, {
+        method: 'DELETE'
+      })
+      .then(response => {
+        if (response.ok) {
+          alert('Student deleted successfully!');
+          loadAllStudents();
+        } else {
+          alert('Error deleting student!');
+        }
+      })
+      .catch(error => {
+        alert('Error: ' + error.message);
+      });
+    }
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
