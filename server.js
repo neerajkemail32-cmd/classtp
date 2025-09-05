@@ -186,6 +186,17 @@ app.get('/announcements', (req, res) => {
     res.json(results);
   });
 });
+// Delete an announcement
+app.delete('/announcements/:id', (req, res) => {
+  const sql = "DELETE FROM announcements WHERE id = ?";
+  db.query(sql, [req.params.id], (err, result) => {
+    if (err) {
+      console.error("Error deleting announcement:", err);
+      return res.status(500).send("Server error");
+    }
+    res.send("Announcement deleted");
+  });
+});
 
 
 // ===================== GLOBAL ERROR HANDLING =====================
