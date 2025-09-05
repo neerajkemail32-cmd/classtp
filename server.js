@@ -160,6 +160,34 @@ app.put('/fees/:id', (req, res) => {
     });
 });
 
+// ================= ANNOUNCEMENTS =================
+
+// Post new announcement (Admin)
+app.post('/announcements', (req, res) => {
+  const { title, message, date, time } = req.body;
+  const sql = "INSERT INTO announcements (title, message, date, time) VALUES (?, ?, ?, ?)";
+  db.query(sql, [title, message, date, time], (err) => {
+    if (err) {
+      console.error("Error posting announcement:", err);
+      return res.status(500).send("Error posting announcement");
+    }
+    res.send("Announcement posted successfully");
+  });
+});
+
+// Get all announcements (for students/admin)
+app.get('/announcements', (req, res) => {
+  const sql = "SELECT * FROM announcements ORDER BY id DESC";
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching announcements:", err);
+      return res.status(500).send("Error fetching announcements");
+    }
+    res.json(results);
+  });
+});
+
+
 // ===================== GLOBAL ERROR HANDLING =====================
 process.on('unhandledRejection', (err) => {
     console.error('❌ Unhandled Rejection:', err);
