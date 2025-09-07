@@ -83,10 +83,15 @@ form.addEventListener('submit', async (e) => {
     const data = await res.json();
 
     if (res.ok && data.success) {
-      localStorage.setItem('studentEmail', email);
-      if (role === 'admin') window.location.href = 'admin_dashboard.html';
-      else window.location.href = 'student_dashboard.html';
-    } else {
+  if (role === 'student') {
+    // save email for later use
+    localStorage.setItem('studentEmail', email);
+    window.location.href = 'student_dashboard.html';
+  } else if (role === 'admin') {
+    window.location.href = 'admin_dashboard.html';
+  }
+}
+ else {
       errorMsg.textContent = data.message || 'Login failed. Check credentials.';
       errorMsg.classList.remove('d-none');
     }

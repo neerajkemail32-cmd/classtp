@@ -24,22 +24,31 @@
   </div>
 
   <script>
-    // Get student email from localStorage (saved at login)
-    const email = localStorage.getItem("email");
+    // Get student email saved during login
+    const email = localStorage.getItem("studentEmail");
 
     if (!email) {
       alert("You must log in first!");
       window.location.href = "login.html";
     } else {
-      fetch(`/fees/email/${email}`)
+      // Step 1: get student record by email
+      fetch(`/students/email/${email}`)
+        .then(res => {
+          if (!res.ok) throw new Error("Student not found");
+          return res.json();
+        })
+        .then(student => {
+          // Step 2: get fees using student ID
+          return fetch(`/fees/student/${student.id}`);
+        })
         .then(res => res.json())
         .then(fees => {
-          if (fees.length === 0) {
+          if (!fees || fees.length === 0) {
             document.getElementById("noFees").style.display = "block";
             return;
           }
 
-          const fee = fees[0]; // assuming one fee record per student
+          const fee = fees[0]; // assume one fee record per student
           document.getElementById("studentName").innerText = fee.studentName;
           document.getElementById("studentBatch").innerText = fee.batch;
           document.getElementById("feeAmount").innerText = fee.amount;
@@ -48,7 +57,7 @@
           document.getElementById("feesInfo").style.display = "block";
         })
         .catch(err => {
-          console.error(err);
+          console.error("Error loading fees:", err);
           alert("Error loading fees");
         });
     }
