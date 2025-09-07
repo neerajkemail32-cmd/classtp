@@ -198,6 +198,23 @@ app.delete('/announcements/:id', (req, res) => {
   });
 });
 
+// ===================== STUDENT FEES VIEW =====================
+app.get('/fees/email/:email', (req, res) => {
+    const email = req.params.email;
+    const sql = `
+      SELECT f.id, f.amount, f.status, s.fullName AS studentName, s.batch
+      FROM fees f
+      JOIN students s ON f.studentId = s.id
+      WHERE s.email = ?
+    `;
+    db.query(sql, [email], (err, results) => {
+        if (err) {
+            console.error('❌ Error fetching student fees:', err);
+            return res.status(500).send('Server error');
+        }
+        res.json(results);
+    });
+});
 
 // ===================== GLOBAL ERROR HANDLING =====================
 process.on('unhandledRejection', (err) => {

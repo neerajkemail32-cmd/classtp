@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Fees</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div class="container py-4">
+    <h2 class="mb-4">My Fees</h2>
+
+    <!-- Fees Info -->
+    <div id="feesInfo" class="card shadow-sm p-3" style="display:none;">
+      <h5 id="studentName"></h5>
+      <p><strong>Batch:</strong> <span id="studentBatch"></span></p>
+      <p><strong>Amount:</strong> ₹<span id="feeAmount"></span></p>
+      <p><strong>Status:</strong> <span id="feeStatus"></span></p>
+    </div>
+
+    <div id="noFees" class="alert alert-warning mt-3" style="display:none;">
+      No fees record found for you.
+    </div>
+  </div>
+
+  <script>
+    // Get student email from localStorage (saved at login)
+    const email = localStorage.getItem("email");
+
+    if (!email) {
+      alert("You must log in first!");
+      window.location.href = "login.html";
+    } else {
+      fetch(`/fees/email/${email}`)
+        .then(res => res.json())
+        .then(fees => {
+          if (fees.length === 0) {
+            document.getElementById("noFees").style.display = "block";
+            return;
+          }
+
+          const fee = fees[0]; // assuming one fee record per student
+          document.getElementById("studentName").innerText = fee.studentName;
+          document.getElementById("studentBatch").innerText = fee.batch;
+          document.getElementById("feeAmount").innerText = fee.amount;
+          document.getElementById("feeStatus").innerText = fee.status;
+
+          document.getElementById("feesInfo").style.display = "block";
+        })
+        .catch(err => {
+          console.error(err);
+          alert("Error loading fees");
+        });
+    }
+  </script>
+</body>
+</html>
