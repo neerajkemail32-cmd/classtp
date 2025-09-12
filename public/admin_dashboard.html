@@ -3,150 +3,82 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Dashboard | My Tuition Classes</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <title>Admin Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body {
-      background-color: #f8f9fa;
-    }
-    .main-container {
-      max-width: 900px;
-      margin: 20px auto;
-      padding: 20px;
+    body { background-color: #f8f9fa; }
+    .hidden { display: none; }
+    .box {
       background: white;
+      padding: 15px;
       border-radius: 5px;
-    }
-    .hidden {
-      display: none;
+      margin-top: 15px;
     }
   </style>
 </head>
 <body>
 
   <!-- Header -->
-  <div class="bg-dark text-white p-3">
-    <div class="container">
-      <h2>Admin Dashboard</h2>
-    </div>
+  <div class="bg-dark text-white text-center p-2">
+    <h3>Admin Dashboard</h3>
   </div>
 
   <!-- Main Content -->
-  <div class="main-container">
+  <div class="container box">
+
     <!-- Main Menu -->
     <div id="mainMenu">
-      <h3>Welcome Admin!</h3>
+      <h4>Welcome Admin</h4>
       <p>Choose what you want to do:</p>
-      <hr>
-      <div class="row">
-        <!-- Manage Students -->
-        <div class="col-md-4 mb-3">
-          <div class="card">
-            <div class="card-body text-center">
-              <h5>Manage Students</h5>
-              <button class="btn btn-primary" onclick="openStudents()">Open</button>
-            </div>
-          </div>
-        </div>
 
-        <!-- Manage Fees -->
-        <div class="col-md-4 mb-3">
-          <div class="card">
-            <div class="card-body text-center">
-              <h5>Manage Fees</h5>
-              <a href="fees.html" class="btn btn-success">Open</a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Manage Announcements -->
-        <div class="col-md-4 mb-3">
-          <div class="card">
-            <div class="card-body text-center">
-              <h5>Manage Announcements</h5>
-              <a href="announcements.html" class="btn btn-warning">Open</a>
-            </div>
-          </div>
-        </div>
-      </div>
+      <button class="btn btn-primary w-100 mb-2" onclick="openStudents()">Manage Students</button>
+      <a href="fees.html" class="btn btn-success w-100 mb-2">Manage Fees</a>
+      <a href="announcements.html" class="btn btn-warning w-100 mb-2">Manage Announcements</a>
     </div>
 
     <!-- Student Management -->
     <div id="studentPage" class="hidden">
-      <div class="mb-3">
-        <button class="btn btn-outline-secondary" onclick="goBack()">← Back</button>
-        <h3 class="d-inline ms-3">Student Management</h3>
-      </div>
+      <button class="btn btn-secondary mb-2" onclick="goBack()">← Back</button>
+      <h4>Student Management</h4>
       <hr>
-      
-      <!-- Search -->
-      <div class="mb-4">
-        <h5>Search Students</h5>
-        <div class="row">
-          <div class="col-md-6">
-            <input type="text" class="form-control" id="searchBox" placeholder="Type name or email to search">
-          </div>
-          <div class="col-md-3">
-            <button class="btn btn-info" onclick="loadAllStudents()">Show All</button>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Add Student -->
-      <div class="mb-4">
-        <h5>Add New Student</h5>
-        <form id="studentForm">
-          <div class="row mb-2">
-            <div class="col-md-3">
-              <label>Full Name:</label>
-              <input type="text" class="form-control" id="name" required>
-            </div>
-            <div class="col-md-3">
-              <label>Email:</label>
-              <input type="email" class="form-control" id="email" required>
-            </div>
-            <div class="col-md-2">
-              <label>Mobile:</label>
-              <input type="text" class="form-control" id="mobile" required>
-            </div>
-            <div class="col-md-2">
-              <label>Batch:</label>
-              <input type="text" class="form-control" id="batch" required>
-            </div>
-            <div class="col-md-2">
-              <label>&nbsp;</label>
-              <button type="submit" class="btn btn-success form-control">Add</button>
-            </div>
-          </div>
-        </form>
-      </div>
-      
+
+      <!-- Search Section -->
+      <input type="text" class="form-control mb-2" id="searchBox" placeholder="Type name or email">
+      <button class="btn btn-info w-100 mb-3" onclick="loadAllStudents()">Show All Students</button>
+
+      <!-- Add Student Section -->
+      <h5>Add New Student</h5>
+      <form id="studentForm" class="mb-3">
+        <input type="text" class="form-control mb-2" id="name" placeholder="Full Name" required>
+        <input type="email" class="form-control mb-2" id="email" placeholder="Email" required>
+        <input type="text" class="form-control mb-2" id="mobile" placeholder="Mobile" required>
+        <input type="text" class="form-control mb-2" id="batch" placeholder="Batch" required>
+        <button type="submit" class="btn btn-success w-100">Add Student</button>
+      </form>
+
       <!-- Students List -->
-      <div>
-        <h5>Students List</h5>
-        <div class="table-responsive">
-          <table class="table table-bordered">
-            <thead class="table-dark">
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Mobile</th>
-                <th>Batch</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="studentsList">
-              <tr>
-                <td colspan="6" class="text-center">Click "Show All" to see students</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <h5>Students List</h5>
+      <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Mobile</th>
+            <th>Batch</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="studentsList">
+          <tr>
+            <td colspan="6" class="text-center">Click "Show All Students" to load data</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- Your SAME JavaScript -->
   <script>
     const API_BASE = "https://classtp.onrender.com"; // 🔑 Replace with your Render URL
 
