@@ -9,35 +9,43 @@
 <body class="bg-light">
 
   <!-- Navbar -->
-  <nav class="navbar navbar-light bg-light border-bottom p-3">
+  <nav class="navbar navbar-light bg-primary border-bottom p-3">
     <div class="container d-flex justify-content-between align-items-center">
-      <a class="navbar-brand" href="#">Sundar's Classes</a>
+      
+      <!-- Logo Image -->
+      <a class="navbar-brand d-flex align-items-center" href="#">
+        <img src="images/logosundars.jpg" alt="Logo" width="60" height="60" class="me-2 rounded-circle">
+        <span class="text-white fw-bold fs-5">Sundar's Classes</span>
+      </a>
+
+      <!-- Login/Register Buttons -->
       <div>
         <a href="login.html" class="btn btn-dark btn-sm me-2">Login</a>
-        <a href="register.html" class="btn btn-outline-secondary btn-sm">Register</a>
+        <a href="register.html" class="btn btn-outline-light btn-sm">Register</a>
       </div>
     </div>
   </nav>
 
   <!-- Hero Section -->
   <div class="container text-center my-4">
-    <h1 class="h3">Welcome to Sundar's Classes</h1>
-    <p>Empowering students through quality education and personal attention.</p>
+    <h1 class="h3 text-primary">Welcome to Sundar's Classes</h1>
+    <p class="lead text-secondary">Empowering students through quality education and personal attention.</p>
+    <a href="register.html" class="btn btn-success">Join Now</a>
   </div>
 
-  <!-- Subjects Section -->
-  <div class="container">
-    <h3 class="text-center mb-3">Subjects We Offer</h3>
+  <!-- Subjects Section (Moved to Bottom) -->
+  <div class="container mt-5">
+    <h3 class="text-center mb-3 text-warning">Subjects We Offer</h3>
     <div class="row">
       <div class="col-md-6 mb-3">
-        <div class="border rounded p-3 text-center">
-          <h5>Commerce</h5>
+        <div class="border rounded p-3 text-center bg-light shadow-sm">
+          <h5 class="text-primary">Commerce</h5>
           <p>Clear concepts with expert tricks and regular tests.</p>
         </div>
       </div>
       <div class="col-md-6 mb-3">
-        <div class="border rounded p-3 text-center">
-          <h5>Science</h5>
+        <div class="border rounded p-3 text-center bg-light shadow-sm">
+          <h5 class="text-success">Science</h5>
           <p>Physics, Chemistry & Biology explained simply.</p>
         </div>
       </div>
