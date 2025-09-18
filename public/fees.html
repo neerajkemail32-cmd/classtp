@@ -1,148 +1,274 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Manage Fees | Admin Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-  <div class="container py-4">
-    <h2 class="mb-4">Manage Fees</h2>
+const express = require('express');
+const db = require('./db'); // Your db.js connection
+const bodyParser = require('body-parser');
+const cors = require('cors');
 
-    <!-- Search Student -->
-    <div class="mb-4">
-      <div class="input-group">
-        <input type="number" class="form-control" id="feesSearch" placeholder="Enter Student ID">
-        <button class="btn btn-primary" onclick="searchFees()">Search</button>
-      </div>
-    </div>
+const app = express();
 
-    <!-- Student Fees Info -->
-    <div id="feesInfo" class="card shadow-sm p-3" style="display:none;">
-      <h5 id="studentName"></h5>
-      <p><strong>Batch:</strong> <span id="studentBatch"></span></p>
-      <p><strong>Amount:</strong> ₹<span id="feeAmount"></span></p>
-      <p>
-        <strong>Status:</strong>
-        <select id="feeStatus" class="form-select d-inline w-auto" onchange="updateFeeStatus()">
-          <option value="Pending">Pending</option>
-          <option value="Paid">Paid</option>
-        </select>
-      </p>
-    </div>
+// ===================== MIDDLEWARE =====================
+app.use(cors());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(express.static('public')); // Serve static files
 
-    <div id="noFees" class="alert alert-warning mt-3" style="display:none;">
-      No fees record found for this student.
-    </div>
+// ===================== LOGGER =====================
+app.use((req, res, next) => {
+  console.log(`[REQUEST] ${req.method} ${req.url} - Body:`, req.body);
+  next();
+});
 
-    <hr class="my-4">
+// ===================== USER REGISTRATION =====================
+app.post('/register', (req, res) => {
+  const { fullName, email, mobile, password } = req.body;
+  const role = 'student';
 
-    <!-- Auto Add / Update Fees by Batch -->
-    <h4 class="mb-3">Set Fees by Batch</h4>
-    <div class="card shadow-sm p-3">
-      <div class="mb-3">
-        <label for="batchSelect" class="form-label">Select Batch</label>
-        <select class="form-select" id="batchSelect" onchange="autoApplyBatchFees()">
-          <option value="">-- Select Batch --</option>
-        </select>
-      </div>
+  const sql = 'INSERT INTO users (fullName, email, mobile, password, role) VALUES (?, ?, ?, ?, ?)';
+  db.query(sql, [fullName, email, mobile, password, role], (err) => {
+    if (err) {
+      console.error('❌ Error inserting user:', err);
+      return res.status(500).send('Error registering user');
+    }
+    console.log('✅ User registered:', email);
+    res.send('✅ User registered successfully');
+  });
+});
 
-      <div class="mb-3">
-        <label for="batchAmount" class="form-label">Fee Amount (₹)</label>
-        <input type="number" class="form-control" id="batchAmount" placeholder="Enter Fee Amount" oninput="autoApplyBatchFees()">
-      </div>
+// ===================== LOGIN =====================
+app.post('/login', (req, res) => {
+  const { email, password, role } = req.body;
 
-      <div class="mb-3">
-        <label for="dueDate" class="form-label">Due Date</label>
-        <input type="date" class="form-control" id="dueDate" onchange="autoApplyBatchFees()">
-      </div>
-    </div>
-  </div>
+  console.log(`[LOGIN ATTEMPT] Email: ${email}, Role: ${role}`);
 
-  <script>
-    let currentFeeId = null;
-
-    function searchFees() {
-      const studentId = document.getElementById('feesSearch').value.trim();
-      if (!studentId) {
-        alert('Enter Student ID first!');
-        return;
-      }
-
-      fetch(`/fees/student/${studentId}`)
-        .then(res => res.json())
-        .then(fees => {
-          if (fees.length === 0) {
-            document.getElementById('feesInfo').style.display = 'none';
-            document.getElementById('noFees').style.display = 'block';
-            return;
-          }
-
-          const fee = fees[0];
-          currentFeeId = fee.id;
-
-          document.getElementById('studentName').innerText = fee.studentName;
-          document.getElementById('studentBatch').innerText = fee.batch;
-          document.getElementById('feeAmount').innerText = fee.amount;
-          document.getElementById('feeStatus').value = fee.status;
-
-          document.getElementById('feesInfo').style.display = 'block';
-          document.getElementById('noFees').style.display = 'none';
-        })
-        .catch(err => {
-          console.error(err);
-          alert('Error loading fees');
-        });
+  const sql = 'SELECT * FROM users WHERE email = ? AND password = ? AND role = ?';
+  db.query(sql, [email, password, role], (err, results) => {
+    if (err) {
+      console.error('❌ Login query error:', err);
+      return res.status(500).send('Server error');
     }
 
-    function updateFeeStatus() {
-      if (!currentFeeId) return;
-      const newStatus = document.getElementById('feeStatus').value;
+    if (results.length > 0) {
+      console.log('✅ Login successful for:', email);
+      res.json({ success: true, role: results[0].role, email: results[0].email });
+    } else {
+      console.log('❌ Login failed for:', email);
+      res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+  });
+});
 
-      fetch(`/fees/${currentFeeId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
-      })
-      .then(res => res.text())
-      .then(msg => alert(msg))
-      .catch(err => alert('Error updating status'));
+// ===================== STUDENT ROUTES =====================
+
+// Get student by email
+app.get('/students/email/:email', (req, res) => {
+  const email = req.params.email;
+  const sql = 'SELECT * FROM students WHERE email = ?';
+  db.query(sql, [email], (err, results) => {
+    if (err) {
+      console.error('❌ Error fetching student:', err);
+      return res.status(500).send('Server error');
+    }
+    if (results.length === 0) {
+      return res.status(404).send('Student not found');
+    }
+    res.json(results[0]);
+  });
+});
+
+// Add new student
+app.post('/students', (req, res) => {
+  const { fullName, email, mobile, batch } = req.body;
+  const sql = 'INSERT INTO students (fullName, email, mobile, batch) VALUES (?, ?, ?, ?)';
+  db.query(sql, [fullName, email, mobile, batch], (err) => {
+    if (err) {
+      console.error('❌ Error inserting student:', err);
+      return res.status(500).send('Failed to add student');
+    }
+    res.send('✅ Student added successfully');
+  });
+});
+
+// Get all students
+app.get('/students', (req, res) => {
+  const sql = 'SELECT * FROM students';
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('❌ Error fetching all students:', err);
+      return res.status(500).send('Server error');
+    }
+    res.json(results);
+  });
+});
+
+// Update student by ID
+app.put('/students/:id', (req, res) => {
+  const studentId = req.params.id;
+  const { fullName, email, mobile, batch } = req.body;
+  const sql = 'UPDATE students SET fullName = ?, email = ?, mobile = ?, batch = ? WHERE id = ?';
+  db.query(sql, [fullName, email, mobile, batch, studentId], (err) => {
+    if (err) {
+      console.error('❌ Error updating student:', err);
+      return res.status(500).send('Error updating student');
+    }
+    res.send('✅ Student updated successfully');
+  });
+});
+
+// Delete student by ID
+app.delete('/students/:id', (req, res) => {
+  const studentId = req.params.id;
+  const sql = 'DELETE FROM students WHERE id = ?';
+  db.query(sql, [studentId], (err) => {
+    if (err) {
+      console.error('❌ Error deleting student:', err);
+      return res.status(500).send('Error deleting student');
+    }
+    res.send('✅ Student deleted successfully');
+  });
+});
+
+// ===================== FEES ROUTES =====================
+
+// Get fees for a student (with student details)
+app.get('/fees/student/:id', (req, res) => {
+  const studentId = req.params.id;
+  const sql = `
+    SELECT f.id, f.amount, f.status, f.dueDate, s.fullName AS studentName, s.batch 
+    FROM fees f
+    JOIN students s ON f.studentId = s.id
+    WHERE f.studentId = ?
+  `;
+  db.query(sql, [studentId], (err, results) => {
+    if (err) {
+      console.error('❌ Error fetching fees:', err);
+      return res.status(500).send('Server error');
+    }
+    res.json(results);
+  });
+});
+
+// Update fee status
+app.put('/fees/:id', (req, res) => {
+  const feeId = req.params.id;
+  const { status } = req.body;
+  const sql = 'UPDATE fees SET status = ? WHERE id = ?';
+  db.query(sql, [status, feeId], (err) => {
+    if (err) {
+      console.error('❌ Error updating fee:', err);
+      return res.status(500).send('Server error');
+    }
+    res.send('✅ Fee status updated successfully');
+  });
+});
+
+// Apply or Update Fees by Batch
+app.post('/fees/batch', (req, res) => {
+  const { batch, amount, dueDate } = req.body;
+
+  const getStudents = "SELECT id FROM students WHERE batch = ?";
+  db.query(getStudents, [batch], (err, students) => {
+    if (err) {
+      console.error("❌ Error fetching students:", err);
+      return res.status(500).send("Server error");
     }
 
-    function autoApplyBatchFees() {
-      const batch = document.getElementById('batchSelect').value;
-      const amount = document.getElementById('batchAmount').value;
-      const dueDate = document.getElementById('dueDate').value;
-
-      if (!batch || !amount) return;
-
-      fetch('/fees/batch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ batch, amount, dueDate })
-      })
-      .then(res => res.text())
-      .then(msg => console.log(msg))
-      .catch(err => console.error('Error applying batch fees:', err));
+    if (students.length === 0) {
+      return res.status(404).send("No students found in this batch");
     }
 
-    // ✅ Populate batch dropdown dynamically from backend
-    document.addEventListener('DOMContentLoaded', () => {
-      fetch('/batches')
-        .then(res => res.json())
-        .then(batches => {
-          const batchSelect = document.getElementById('batchSelect');
-          batchSelect.innerHTML = '<option value="">-- Select Batch --</option>';
-          batches.forEach(b => {
-            const opt = document.createElement('option');
-            opt.value = b;
-            opt.textContent = b;
-            batchSelect.appendChild(opt);
-          });
-        })
-        .catch(err => console.error('Error loading batches:', err));
+    const insertFee = `
+      INSERT INTO fees (studentId, amount, status, dueDate) 
+      VALUES (?, ?, 'Pending', ?)
+      ON DUPLICATE KEY UPDATE amount = VALUES(amount), dueDate = VALUES(dueDate)
+    `;
+
+    students.forEach(stu => {
+      db.query(insertFee, [stu.id, amount, dueDate], (err2) => {
+        if (err2) {
+          console.error("❌ Error inserting/updating fee:", err2);
+        }
+      });
     });
-  </script>
-</body>
-</html>
+
+    res.send("✅ Fees applied to batch successfully");
+  });
+});
+
+// ===================== ANNOUNCEMENTS =================
+app.post('/announcements', (req, res) => {
+  const { title, message, date, time } = req.body;
+  const sql = "INSERT INTO announcements (title, message, date, time) VALUES (?, ?, ?, ?)";
+  db.query(sql, [title, message, date, time], (err) => {
+    if (err) {
+      console.error("Error posting announcement:", err);
+      return res.status(500).send("Error posting announcement");
+    }
+    res.send("Announcement posted successfully");
+  });
+});
+
+app.get('/announcements', (req, res) => {
+  const sql = "SELECT * FROM announcements ORDER BY id DESC";
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching announcements:", err);
+      return res.status(500).send("Error fetching announcements");
+    }
+    res.json(results);
+  });
+});
+
+app.delete('/announcements/:id', (req, res) => {
+  const sql = "DELETE FROM announcements WHERE id = ?";
+  db.query(sql, [req.params.id], (err) => {
+    if (err) {
+      console.error("Error deleting announcement:", err);
+      return res.status(500).send("Server error");
+    }
+    res.send("Announcement deleted");
+  });
+});
+
+// ===================== STUDENT FEES VIEW =====================
+app.get('/fees/email/:email', (req, res) => {
+  const email = req.params.email;
+  const sql = `
+    SELECT f.id, f.amount, f.status, f.dueDate, s.fullName AS studentName, s.batch
+    FROM fees f
+    JOIN students s ON f.studentId = s.id
+    WHERE s.email = ?
+  `;
+  db.query(sql, [email], (err, results) => {
+    if (err) {
+      console.error('❌ Error fetching student fees:', err);
+      return res.status(500).send('Server error');
+    }
+    res.json(results);
+  });
+});
+
+// ===================== BATCH ROUTE =====================
+app.get('/batches', (req, res) => {
+  const sql = "SELECT DISTINCT batch FROM students";
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("❌ Error fetching batches:", err);
+      return res.status(500).send("Server error");
+    }
+    const batches = results.map(r => r.batch);
+    res.json(batches);
+  });
+});
+
+// ===================== GLOBAL ERROR HANDLING =====================
+process.on('unhandledRejection', (err) => {
+  console.error('❌ Unhandled Rejection:', err);
+});
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err);
+});
+
+// ===================== START SERVER =====================
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
