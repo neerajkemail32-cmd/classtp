@@ -18,7 +18,7 @@
 
   <!-- Attendance Table -->
   <table class="table table-bordered" id="attendanceTable" style="display:none;">
-    <thead>
+    <thead class="table-light">
       <tr>
         <th>Date</th>
         <th>Status</th>
@@ -42,18 +42,23 @@
           return res.json();
         })
         .then(data => {
-          console.log("Attendance data:", data);
-
           const tbody = document.getElementById('attendanceList');
           tbody.innerHTML = '';
 
           if (data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="2">No attendance records found</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="2" class="text-center">No attendance records found</td></tr>`;
           } else {
             data.forEach(record => {
+              // Format date (DD Mon YYYY)
+              const formattedDate = new Date(record.date).toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+              });
+
               tbody.innerHTML += `
                 <tr>
-                  <td>${record.date}</td>
+                  <td>${formattedDate}</td>
                   <td>${record.status}</td>
                 </tr>
               `;
