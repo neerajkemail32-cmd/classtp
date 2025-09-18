@@ -51,13 +51,15 @@
       fetch(`/students/batch/${batch}`)
         .then(res => res.json())
         .then(data => {
+          console.log("Students fetched:", data); // Debugging log
           const tbody = document.getElementById('studentsList');
           tbody.innerHTML = '';
+
           data.forEach(s => {
             tbody.innerHTML += `
               <tr>
                 <td>${s.id}</td>
-                <td>${s.name}</td>
+                <td>${s.fullName}</td>
                 <td>
                   <input type="radio" name="status_${s.id}" value="Present" checked> Present
                   <input type="radio" name="status_${s.id}" value="Absent"> Absent
@@ -65,7 +67,12 @@
               </tr>
             `;
           });
+
           document.getElementById('attendanceForm').style.display = 'block';
+        })
+        .catch(err => {
+          console.error("Error fetching students:", err);
+          alert("Error loading students for this batch");
         });
     }
 
@@ -96,6 +103,7 @@
       fetch('/batches')
         .then(res => res.json())
         .then(batches => {
+          console.log("Batches fetched:", batches); // Debugging log
           const batchSelect = document.getElementById('batchSelect');
           batches.forEach(b => {
             const opt = document.createElement('option');
@@ -103,6 +111,10 @@
             opt.textContent = b;
             batchSelect.appendChild(opt);
           });
+        })
+        .catch(err => {
+          console.error("Error fetching batches:", err);
+          alert("Error loading batches");
         });
     });
   </script>
