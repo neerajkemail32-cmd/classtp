@@ -19,14 +19,14 @@
     </div>
 
     <!-- Student Fees Info -->
-    <div id="feesInfo" class="card shadow-sm p-3" style="display:none;">
+    <div id="feesInfo" style="display:none;">
       <h5 id="studentName"></h5>
       <p><strong>Batch:</strong> <span id="studentBatch"></span></p>
       <p><strong>Amount:</strong> ₹<span id="feeAmount"></span></p>
       <p><strong>Due Date:</strong> <span id="feeDueDate"></span></p>
       <p>
         <strong>Status:</strong>
-        <select id="feeStatus" class="form-select d-inline w-auto" onchange="updateFeeStatus()">
+        <select id="feeStatus" onchange="updateFeeStatus()">
           <option value="Pending">Pending</option>
           <option value="Paid">Paid</option>
         </select>
@@ -41,7 +41,7 @@
 
     <!-- Apply Fees by Batch -->
     <h4 class="mb-3">Set Fees by Batch</h4>
-    <div class="card shadow-sm p-3">
+    <div>
       <div class="mb-3">
         <label for="batchSelect" class="form-label">Select Batch</label>
         <select class="form-select" id="batchSelect">
@@ -83,7 +83,6 @@
           document.getElementById('studentBatch').innerText = fee.batch;
           document.getElementById('feeAmount').innerText = fee.amount;
 
-          // ✅ Format due date properly
           const due = fee.dueDate ? new Date(fee.dueDate).toLocaleDateString() : "Not Set";
           document.getElementById('feeDueDate').innerText = due;
 
@@ -128,7 +127,6 @@
       .catch(err => console.error('Error applying batch fees:', err));
     }
 
-    // ✅ Load batches on page load
     document.addEventListener('DOMContentLoaded', () => {
       fetch('/batches')
         .then(res => res.json())
