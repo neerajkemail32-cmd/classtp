@@ -25,13 +25,16 @@
           }
 
           data.forEach(a => {
+            // Format date (removes time completely)
+            const onlyDate = new Date(a.date).toISOString().split('T')[0];
+
             const div = document.createElement('div');
             div.className = "border rounded p-3 mb-3";
 
             div.innerHTML = `
               <h5>${a.title}</h5>
               <p>${a.message}</p>
-              <small class="text-muted">${a.date}</small>
+              <small class="text-muted">${onlyDate}</small>
             `;
             container.appendChild(div);
           });
