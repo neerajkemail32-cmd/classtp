@@ -35,6 +35,29 @@
     <div id="noFees" class="alert alert-warning mt-3" style="display:none;">
       No fees record found for this student.
     </div>
+
+    <hr class="my-4">
+
+    <!-- Auto Add / Update Fees by Batch -->
+    <h4 class="mb-3">Set Fees by Batch</h4>
+    <div class="card shadow-sm p-3">
+      <div class="mb-3">
+        <label for="batchSelect" class="form-label">Select Batch</label>
+        <select class="form-select" id="batchSelect" onchange="autoApplyBatchFees()">
+          <option value="">-- Select Batch --</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label for="batchAmount" class="form-label">Fee Amount (₹)</label>
+        <input type="number" class="form-control" id="batchAmount" placeholder="Enter Fee Amount" oninput="autoApplyBatchFees()">
+      </div>
+
+      <div class="mb-3">
+        <label for="dueDate" class="form-label">Due Date</label>
+        <input type="date" class="form-control" id="dueDate" onchange="autoApplyBatchFees()">
+      </div>
+    </div>
   </div>
 
   <script>
@@ -56,7 +79,7 @@
             return;
           }
 
-          const fee = fees[0]; // take first fee record
+          const fee = fees[0];
           currentFeeId = fee.id;
 
           document.getElementById('studentName').innerText = fee.studentName;
@@ -86,6 +109,40 @@
       .then(msg => alert(msg))
       .catch(err => alert('Error updating status'));
     }
+
+    function autoApplyBatchFees() {
+      const batch = document.getElementById('batchSelect').value;
+      const amount = document.getElementById('batchAmount').value;
+      const dueDate = document.getElementById('dueDate').value;
+
+      if (!batch || !amount) return;
+
+      fetch('/fees/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ batch, amount, dueDate })
+      })
+      .then(res => res.text())
+      .then(msg => console.log(msg))
+      .catch(err => console.error('Error applying batch fees:', err));
+    }
+
+    // ✅ Populate batch dropdown dynamically from backend
+    document.addEventListener('DOMContentLoaded', () => {
+      fetch('/batches')
+        .then(res => res.json())
+        .then(batches => {
+          const batchSelect = document.getElementById('batchSelect');
+          batchSelect.innerHTML = '<option value="">-- Select Batch --</option>';
+          batches.forEach(b => {
+            const opt = document.createElement('option');
+            opt.value = b;
+            opt.textContent = b;
+            batchSelect.appendChild(opt);
+          });
+        })
+        .catch(err => console.error('Error loading batches:', err));
+    });
   </script>
 </body>
 </html>
