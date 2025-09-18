@@ -11,24 +11,13 @@
     <h2 class="mb-4">My Fees</h2>
 
     <!-- Student Info -->
-    <div id="studentInfo" class="mb-3" style="display:none;">
+    <div id="studentInfo" style="display:none;" class="mb-3">
       <h5 id="studentName"></h5>
       <p><strong>Batch:</strong> <span id="studentBatch"></span></p>
     </div>
 
-    <!-- Fees Table -->
-    <div id="feesSection" style="display:none;">
-      <table class="table table-bordered">
-        <thead>
-          <tr>
-            <th>Amount (₹)</th>
-            <th>Status</th>
-            <th>Due Date</th>
-          </tr>
-        </thead>
-        <tbody id="feesTableBody"></tbody>
-      </table>
-    </div>
+    <!-- Fees List -->
+    <div id="feesList" style="display:none;"></div>
 
     <div id="noFees" class="alert alert-warning mt-3" style="display:none;">
       No fees record found for you.
@@ -36,14 +25,13 @@
   </div>
 
   <script>
-    // Get student email saved during login
     const email = localStorage.getItem("studentEmail");
 
     if (!email) {
       alert("You must log in first!");
       window.location.href = "login.html";
     } else {
-      // Step 1: get student record by email
+      // Get student record
       fetch(`/students/email/${email}`)
         .then(res => {
           if (!res.ok) throw new Error("Student not found");
@@ -54,7 +42,7 @@
           document.getElementById("studentBatch").innerText = student.batch;
           document.getElementById("studentInfo").style.display = "block";
 
-          // Step 2: get fees using student email
+          // Get fees for student
           return fetch(`/fees/email/${email}`);
         })
         .then(res => res.json())
@@ -64,24 +52,22 @@
             return;
           }
 
-          const tbody = document.getElementById("feesTableBody");
-          tbody.innerHTML = "";
+          const feesList = document.getElementById("feesList");
+          feesList.innerHTML = "";
 
           fees.forEach(fee => {
-            const tr = document.createElement("tr");
-
-            // Format due date
             const due = fee.dueDate ? new Date(fee.dueDate).toLocaleDateString() : "Not Set";
-
-            tr.innerHTML = `
-              <td>₹${fee.amount}</td>
-              <td>${fee.status}</td>
-              <td>${due}</td>
+            const div = document.createElement("div");
+            div.className = "border p-2 mb-2 bg-white";
+            div.innerHTML = `
+              <p><strong>Amount:</strong> ₹${fee.amount}</p>
+              <p><strong>Status:</strong> ${fee.status}</p>
+              <p><strong>Due Date:</strong> ${due}</p>
             `;
-            tbody.appendChild(tr);
+            feesList.appendChild(div);
           });
 
-          document.getElementById("feesSection").style.display = "block";
+          feesList.style.display = "block";
         })
         .catch(err => {
           console.error("Error loading fees:", err);
