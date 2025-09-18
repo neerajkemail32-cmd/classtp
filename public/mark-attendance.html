@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mark Attendance</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container mt-4">
+
+  <h2 class="mb-3">Mark Attendance</h2>
+
+  <!-- Select Batch & Date -->
+  <div class="mb-3">
+    <label class="form-label">Batch</label>
+    <select id="batchSelect" class="form-select">
+      <option value="">-- Select Batch --</option>
+    </select>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Date</label>
+    <input type="date" id="attendanceDate" class="form-control">
+  </div>
+  <button class="btn btn-primary mb-3" onclick="loadStudents()">Load Students</button>
+
+  <!-- Student Attendance List -->
+  <form id="attendanceForm" style="display:none;">
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Student ID</th>
+          <th>Name</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="studentsList"></tbody>
+    </table>
+    <button type="submit" class="btn btn-success">Submit Attendance</button>
+  </form>
+
+  <script>
+    // Load students by batch
+    function loadStudents() {
+      const batch = document.getElementById('batchSelect').value;
+      const date = document.getElementById('attendanceDate').value;
+
+      if (!batch || !date) {
+        alert("Please select batch and date!");
+        return;
+      }
+
+      fetch(`/students/batch/${batch}`)
+        .then(res => res.json())
+        .then(data => {
+          const tbody = document.getElementById('studentsList');
+          tbody.innerHTML = '';
+          data.forEach(s => {
+            tbody.innerHTML += `
+              <tr>
+                <td>${s.id}</td>
+                <td>${s.name}</td>
+                <td>
+                  <input type="radio" name="status_${s.id}" value="Present" checked> Present
+                  <input type="radio" name="status_${s.id}" value="Absent"> Absent
+                </td>
+              </tr>
+            `;
+          });
+          document.getElementById('attendanceForm').style.display = 'block';
+        });
+    }
+
+    // Submit Attendance
+    document.getElementById('attendanceForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const batch = document.getElementById('batchSelect').value;
+      const date = document.getElementById('attendanceDate').value;
+
+      const statuses = {};
+      document.querySelectorAll('input[type="radio"]:checked').forEach(radio => {
+        const id = radio.name.split('_')[1];
+        statuses[id] = radio.value;
+      });
+
+      fetch('/attendance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ batch, date, statuses })
+      })
+      .then(res => res.text())
+      .then(msg => alert(msg))
+      .catch(err => console.error("Error saving attendance:", err));
+    });
+
+    // Load batches into dropdown
+    document.addEventListener('DOMContentLoaded', () => {
+      fetch('/batches')
+        .then(res => res.json())
+        .then(batches => {
+          const batchSelect = document.getElementById('batchSelect');
+          batches.forEach(b => {
+            const opt = document.createElement('option');
+            opt.value = b;
+            opt.textContent = b;
+            batchSelect.appendChild(opt);
+          });
+        });
+    });
+  </script>
+</body>
+</html>
