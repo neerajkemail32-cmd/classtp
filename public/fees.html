@@ -11,8 +11,7 @@
     <h2 class="mb-4">Manage Fees</h2>
 
     <!-- Search Student -->
-    <div class="mb-3">
-      <label for="feesSearch" class="form-label">Search Student by ID</label>
+    <div class="mb-4">
       <div class="input-group">
         <input type="number" class="form-control" id="feesSearch" placeholder="Enter Student ID">
         <button class="btn btn-primary" onclick="searchFees()">Search</button>
@@ -20,46 +19,43 @@
     </div>
 
     <!-- Student Fees Info -->
-    <div id="feesInfo" class="border p-3 rounded" style="display:none;">
+    <div id="feesInfo" class="card shadow-sm p-3" style="display:none;">
       <h5 id="studentName"></h5>
       <p><strong>Batch:</strong> <span id="studentBatch"></span></p>
       <p><strong>Amount:</strong> ₹<span id="feeAmount"></span></p>
+      <p><strong>Due Date:</strong> <span id="feeDueDate"></span></p>
       <p>
         <strong>Status:</strong>
-        <select id="feeStatus" class="form-select w-auto d-inline" onchange="updateFeeStatus()">
+        <select id="feeStatus" class="form-select d-inline w-auto" onchange="updateFeeStatus()">
           <option value="Pending">Pending</option>
           <option value="Paid">Paid</option>
         </select>
       </p>
     </div>
 
-    <!-- No Fees Alert -->
     <div id="noFees" class="alert alert-warning mt-3" style="display:none;">
       No fees record found for this student.
     </div>
 
     <hr class="my-4">
 
-    <!-- Set Fees by Batch -->
+    <!-- Apply Fees by Batch -->
     <h4 class="mb-3">Set Fees by Batch</h4>
-    <div class="border p-3 rounded">
-      <div class="mb-2">
-        <label for="batchSelect" class="form-label">Batch</label>
+    <div class="card shadow-sm p-3">
+      <div class="mb-3">
+        <label for="batchSelect" class="form-label">Select Batch</label>
         <select class="form-select" id="batchSelect">
           <option value="">-- Select Batch --</option>
         </select>
       </div>
-
-      <div class="mb-2">
+      <div class="mb-3">
         <label for="batchAmount" class="form-label">Fee Amount (₹)</label>
         <input type="number" class="form-control" id="batchAmount" placeholder="Enter Fee Amount">
       </div>
-
-      <div class="mb-2">
+      <div class="mb-3">
         <label for="dueDate" class="form-label">Due Date</label>
         <input type="date" class="form-control" id="dueDate">
       </div>
-
       <button class="btn btn-success" onclick="applyBatchFees()">Apply Fees</button>
     </div>
   </div>
@@ -67,14 +63,12 @@
   <script>
     let currentFeeId = null;
 
-    // Search fees by student ID
     function searchFees() {
       const studentId = document.getElementById('feesSearch').value.trim();
       if (!studentId) {
         alert('Enter Student ID first!');
         return;
       }
-
       fetch(`/fees/student/${studentId}`)
         .then(res => res.json())
         .then(fees => {
@@ -83,15 +77,17 @@
             document.getElementById('noFees').style.display = 'block';
             return;
           }
-
           const fee = fees[0];
           currentFeeId = fee.id;
-
           document.getElementById('studentName').innerText = fee.studentName;
           document.getElementById('studentBatch').innerText = fee.batch;
           document.getElementById('feeAmount').innerText = fee.amount;
-          document.getElementById('feeStatus').value = fee.status;
 
+          // ✅ Format due date properly
+          const due = fee.dueDate ? new Date(fee.dueDate).toLocaleDateString() : "Not Set";
+          document.getElementById('feeDueDate').innerText = due;
+
+          document.getElementById('feeStatus').value = fee.status;
           document.getElementById('feesInfo').style.display = 'block';
           document.getElementById('noFees').style.display = 'none';
         })
@@ -101,11 +97,9 @@
         });
     }
 
-    // Update fee status
     function updateFeeStatus() {
       if (!currentFeeId) return;
       const newStatus = document.getElementById('feeStatus').value;
-
       fetch(`/fees/${currentFeeId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -116,17 +110,14 @@
       .catch(err => alert('Error updating status'));
     }
 
-    // Apply fees by batch
     function applyBatchFees() {
       const batch = document.getElementById('batchSelect').value;
       const amount = document.getElementById('batchAmount').value;
       const dueDate = document.getElementById('dueDate').value;
-
       if (!batch || !amount) {
-        alert('Please select a batch and enter amount');
+        alert("Please select batch and enter amount");
         return;
       }
-
       fetch('/fees/batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -137,7 +128,7 @@
       .catch(err => console.error('Error applying batch fees:', err));
     }
 
-    // Load batches for dropdown
+    // ✅ Load batches on page load
     document.addEventListener('DOMContentLoaded', () => {
       fetch('/batches')
         .then(res => res.json())
