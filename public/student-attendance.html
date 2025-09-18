@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Attendance</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container mt-4">
+
+  <h2 class="mb-3">My Attendance</h2>
+
+  <!-- Attendance Table -->
+  <table class="table table-bordered" id="attendanceTable" style="display:none;">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="attendanceList"></tbody>
+  </table>
+
+  <script>
+    async function loadAttendance() {
+      try {
+        // 1. Get logged-in user email from localStorage (set during login)
+        const email = localStorage.getItem("userEmail");
+        if (!email) {
+          alert("You are not logged in!");
+          return;
+        }
+
+        // 2. Get student ID using email
+        const studentRes = await fetch(`/students/email/${email}`);
+        if (!studentRes.ok) throw new Error("Student not found");
+        const student = await studentRes.json();
+
+        const studentId = student.id;
+
+        // 3. Fetch attendance by student ID
+        const attRes = await fetch(`/attendance/student/${studentId}`);
+        const data = await attRes.json();
+
+        const tbody = document.getElementById('attendanceList');
+        tbody.innerHTML = '';
+
+        if (data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="2">No attendance records found</td></tr>`;
+        } else {
+          data.forEach(record => {
+            tbody.innerHTML += `
+              <tr>
+                <td>${record.date}</td>
+                <td>${record.status}</td>
+              </tr>
+            `;
+          });
+        }
+
+        document.getElementById('attendanceTable').style.display = 'table';
+      } catch (err) {
+        console.error("Error loading attendance:", err);
+        alert("Error loading attendance records");
+      }
+    }
+
+    // Load automatically when page opens
+    document.addEventListener("DOMContentLoaded", loadAttendance);
+  </script>
+</body>
+</html>
