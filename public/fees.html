@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Manage Fees | Admin Dashboard</title>
+  <title>Manage Fees</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
@@ -11,7 +11,8 @@
     <h2 class="mb-4">Manage Fees</h2>
 
     <!-- Search Student -->
-    <div class="mb-4">
+    <div class="mb-3">
+      <label for="feesSearch" class="form-label">Search Student by ID</label>
       <div class="input-group">
         <input type="number" class="form-control" id="feesSearch" placeholder="Enter Student ID">
         <button class="btn btn-primary" onclick="searchFees()">Search</button>
@@ -19,50 +20,54 @@
     </div>
 
     <!-- Student Fees Info -->
-    <div id="feesInfo" class="card shadow-sm p-3" style="display:none;">
+    <div id="feesInfo" class="border p-3 rounded" style="display:none;">
       <h5 id="studentName"></h5>
       <p><strong>Batch:</strong> <span id="studentBatch"></span></p>
       <p><strong>Amount:</strong> ₹<span id="feeAmount"></span></p>
       <p>
         <strong>Status:</strong>
-        <select id="feeStatus" class="form-select d-inline w-auto" onchange="updateFeeStatus()">
+        <select id="feeStatus" class="form-select w-auto d-inline" onchange="updateFeeStatus()">
           <option value="Pending">Pending</option>
           <option value="Paid">Paid</option>
         </select>
       </p>
     </div>
 
+    <!-- No Fees Alert -->
     <div id="noFees" class="alert alert-warning mt-3" style="display:none;">
       No fees record found for this student.
     </div>
 
     <hr class="my-4">
 
-    <!-- Auto Add / Update Fees by Batch -->
+    <!-- Set Fees by Batch -->
     <h4 class="mb-3">Set Fees by Batch</h4>
-    <div class="card shadow-sm p-3">
-      <div class="mb-3">
-        <label for="batchSelect" class="form-label">Select Batch</label>
-        <select class="form-select" id="batchSelect" onchange="autoApplyBatchFees()">
+    <div class="border p-3 rounded">
+      <div class="mb-2">
+        <label for="batchSelect" class="form-label">Batch</label>
+        <select class="form-select" id="batchSelect">
           <option value="">-- Select Batch --</option>
         </select>
       </div>
 
-      <div class="mb-3">
+      <div class="mb-2">
         <label for="batchAmount" class="form-label">Fee Amount (₹)</label>
-        <input type="number" class="form-control" id="batchAmount" placeholder="Enter Fee Amount" oninput="autoApplyBatchFees()">
+        <input type="number" class="form-control" id="batchAmount" placeholder="Enter Fee Amount">
       </div>
 
-      <div class="mb-3">
+      <div class="mb-2">
         <label for="dueDate" class="form-label">Due Date</label>
-        <input type="date" class="form-control" id="dueDate" onchange="autoApplyBatchFees()">
+        <input type="date" class="form-control" id="dueDate">
       </div>
+
+      <button class="btn btn-success" onclick="applyBatchFees()">Apply Fees</button>
     </div>
   </div>
 
   <script>
     let currentFeeId = null;
 
+    // Search fees by student ID
     function searchFees() {
       const studentId = document.getElementById('feesSearch').value.trim();
       if (!studentId) {
@@ -96,6 +101,7 @@
         });
     }
 
+    // Update fee status
     function updateFeeStatus() {
       if (!currentFeeId) return;
       const newStatus = document.getElementById('feeStatus').value;
@@ -110,12 +116,16 @@
       .catch(err => alert('Error updating status'));
     }
 
-    function autoApplyBatchFees() {
+    // Apply fees by batch
+    function applyBatchFees() {
       const batch = document.getElementById('batchSelect').value;
       const amount = document.getElementById('batchAmount').value;
       const dueDate = document.getElementById('dueDate').value;
 
-      if (!batch || !amount) return;
+      if (!batch || !amount) {
+        alert('Please select a batch and enter amount');
+        return;
+      }
 
       fetch('/fees/batch', {
         method: 'POST',
@@ -123,11 +133,11 @@
         body: JSON.stringify({ batch, amount, dueDate })
       })
       .then(res => res.text())
-      .then(msg => console.log(msg))
+      .then(msg => alert(msg))
       .catch(err => console.error('Error applying batch fees:', err));
     }
 
-    // ✅ Populate batch dropdown dynamically from backend
+    // Load batches for dropdown
     document.addEventListener('DOMContentLoaded', () => {
       fetch('/batches')
         .then(res => res.json())
