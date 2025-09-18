@@ -15,6 +15,9 @@
     <div class="mb-2">
       <textarea id="message" class="form-control" placeholder="Message" required></textarea>
     </div>
+    <div class="mb-2">
+      <input type="date" id="date" class="form-control" required>
+    </div>
     <button type="submit" class="btn btn-primary">Post</button>
   </form>
 
@@ -36,7 +39,7 @@
             div.innerHTML = `
               <h5>${a.title}</h5>
               <p>${a.message}</p>
-              <small class="text-muted">${a.date_time}</small><br>
+              <small class="text-muted">${a.date}</small><br>
               <button class="btn btn-sm btn-danger mt-2" onclick="deleteAnnouncement(${a.id})">Delete</button>
             `;
             container.appendChild(div);
@@ -49,11 +52,12 @@
       e.preventDefault();
       const title = document.getElementById('title').value;
       const message = document.getElementById('message').value;
+      const date = document.getElementById('date').value;
 
       fetch('/announcements', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, message })
+        body: JSON.stringify({ title, message, date })
       }).then(() => {
         document.getElementById('announcementForm').reset();
         loadAnnouncements();
@@ -61,20 +65,14 @@
     });
 
     // Delete announcement
-  function deleteAnnouncement(id) {
+    function deleteAnnouncement(id) {
       if (!confirm("Are you sure you want to delete this announcement?")) return;
 
       fetch(`/announcements/${id}`, { method: 'DELETE' })
         .then(() => loadAnnouncements());
     }
      
-    
-    
-    loadAnnouncements () ;
-         
-
-
-         </script>
-     </body>
-  </html>
-      
+    loadAnnouncements();
+  </script>
+</body>
+</html>

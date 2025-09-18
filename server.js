@@ -194,10 +194,11 @@ app.post('/fees/batch', (req, res) => {
 });
 
 // ===================== ANNOUNCEMENTS =================
+// Add announcement (date entered manually by admin)
 app.post('/announcements', (req, res) => {
-  const { title, message, date, time } = req.body;
-  const sql = "INSERT INTO announcements (title, message, date, time) VALUES (?, ?, ?, ?)";
-  db.query(sql, [title, message, date, time], (err) => {
+  const { title, message, date } = req.body;  // ⬅️ removed time
+  const sql = "INSERT INTO announcements (title, message, date) VALUES (?, ?, ?)";
+  db.query(sql, [title, message, date], (err) => {
     if (err) {
       console.error("Error posting announcement:", err);
       return res.status(500).send("Error posting announcement");
@@ -206,8 +207,9 @@ app.post('/announcements', (req, res) => {
   });
 });
 
+// Get all announcements
 app.get('/announcements', (req, res) => {
-  const sql = "SELECT * FROM announcements ORDER BY id DESC";
+  const sql = "SELECT id, title, message, date FROM announcements ORDER BY id DESC"; // ⬅️ only fetch date
   db.query(sql, (err, results) => {
     if (err) {
       console.error("Error fetching announcements:", err);
@@ -217,6 +219,7 @@ app.get('/announcements', (req, res) => {
   });
 });
 
+// Delete announcement
 app.delete('/announcements/:id', (req, res) => {
   const sql = "DELETE FROM announcements WHERE id = ?";
   db.query(sql, [req.params.id], (err) => {
@@ -227,6 +230,7 @@ app.delete('/announcements/:id', (req, res) => {
     res.send("Announcement deleted");
   });
 });
+
 
 // ===================== STUDENT FEES VIEW =====================
 app.get('/fees/email/:email', (req, res) => {
