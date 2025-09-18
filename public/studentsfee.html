@@ -10,12 +10,24 @@
   <div class="container py-4">
     <h2 class="mb-4">My Fees</h2>
 
-    <!-- Fees Info -->
-    <div id="feesInfo" class="card shadow-sm p-3" style="display:none;">
+    <!-- Student Info -->
+    <div id="studentInfo" class="mb-3" style="display:none;">
       <h5 id="studentName"></h5>
       <p><strong>Batch:</strong> <span id="studentBatch"></span></p>
-      <p><strong>Amount:</strong> ₹<span id="feeAmount"></span></p>
-      <p><strong>Status:</strong> <span id="feeStatus"></span></p>
+    </div>
+
+    <!-- Fees Table -->
+    <div id="feesSection" style="display:none;">
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Amount (₹)</th>
+            <th>Status</th>
+            <th>Due Date</th>
+          </tr>
+        </thead>
+        <tbody id="feesTableBody"></tbody>
+      </table>
     </div>
 
     <div id="noFees" class="alert alert-warning mt-3" style="display:none;">
@@ -38,8 +50,12 @@
           return res.json();
         })
         .then(student => {
-          // Step 2: get fees using student ID
-          return fetch(`/fees/student/${student.id}`);
+          document.getElementById("studentName").innerText = student.fullName;
+          document.getElementById("studentBatch").innerText = student.batch;
+          document.getElementById("studentInfo").style.display = "block";
+
+          // Step 2: get fees using student email
+          return fetch(`/fees/email/${email}`);
         })
         .then(res => res.json())
         .then(fees => {
@@ -48,13 +64,24 @@
             return;
           }
 
-          const fee = fees[0]; // assume one fee record per student
-          document.getElementById("studentName").innerText = fee.studentName;
-          document.getElementById("studentBatch").innerText = fee.batch;
-          document.getElementById("feeAmount").innerText = fee.amount;
-          document.getElementById("feeStatus").innerText = fee.status;
+          const tbody = document.getElementById("feesTableBody");
+          tbody.innerHTML = "";
 
-          document.getElementById("feesInfo").style.display = "block";
+          fees.forEach(fee => {
+            const tr = document.createElement("tr");
+
+            // Format due date
+            const due = fee.dueDate ? new Date(fee.dueDate).toLocaleDateString() : "Not Set";
+
+            tr.innerHTML = `
+              <td>₹${fee.amount}</td>
+              <td>${fee.status}</td>
+              <td>${due}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+
+          document.getElementById("feesSection").style.display = "block";
         })
         .catch(err => {
           console.error("Error loading fees:", err);
