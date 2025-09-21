@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .profile-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: auto;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        .profile-info p {
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+        .profile-info strong {
+            display: inline-block;
+            width: 150px; /* Aligns the labels */
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="profile-container">
+        <h2>Student Profile 🧑‍🎓</h2>
+        <div class="profile-info">
+            <p><strong>Full Name:</strong> <span id="fullName"></span></p>
+            <p><strong>Email:</strong> <span id="email"></span></p>
+            <p><strong>Mobile:</strong> <span id="mobile"></span></p>
+            <p><strong>Batch:</strong> <span id="batch"></span></p>
+            <p><strong>Date of Birth:</strong> <span id="dob"></span></p>
+            <p><strong>Gender:</strong> <span id="gender"></span></p>
+            <p><strong>Address:</strong> <span id="address"></span></p>
+            <p><strong>Parent's Contact:</strong> <span id="parentsContact"></span></p>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="student_dashboard.html">Back to Dashboard</a>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "https://classtp.onrender.com";
+        const studentEmail = localStorage.getItem('studentEmail');
+
+        // This function formats the date for better readability
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-GB'); // Format as DD/MM/YYYY
+        }
+
+        window.onload = () => {
+            if (!studentEmail) {
+                alert('Please login first.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Fetch student data from the server
+            fetch(`${API_BASE}/students/email/${studentEmail}`)
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error('Could not fetch profile data.');
+                    }
+                    return res.json();
+                })
+                .then(student => {
+                    // Populate the HTML with the fetched data
+                    document.getElementById('fullName').textContent = student.fullName || 'N/A';
+                    document.getElementById('email').textContent = student.email || 'N/A';
+                    document.getElementById('mobile').textContent = student.mobile || 'N/A';
+                    document.getElementById('batch').textContent = student.batch || 'N/A';
+                    document.getElementById('dob').textContent = formatDate(student.dob);
+                    document.getElementById('gender').textContent = student.gender || 'N/A';
+                    document.getElementById('address').textContent = student.address || 'N/A';
+                    document.getElementById('parentsContact').textContent = student.parentsContact || 'N/A';
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    alert(err.message);
+                });
+        };
+    </script>
+
+</body>
+</html>
