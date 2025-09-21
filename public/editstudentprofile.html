@@ -1,132 +1,199 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Edit Profile</title>
-</head>
-<body>
-  <h2>Edit Profile</h2>
-
-  <form id="editForm">
-    <div>
-      <label>Full Name:</label><br>
-      <input type="text" id="fullName" required>
-    </div>
-    <div>
-      <label>Email:</label><br>
-      <input type="email" id="email" disabled>
-    </div>
-    <div>
-      <label>Date of Birth:</label><br>
-      <input type="date" id="dob">
-    </div>
-    <div>
-      <label>Gender:</label><br>
-      <select id="gender">
-        <option value="">Select</option>
-        <option value="Male">Male</option>
-        <option value="Female">Female</option>
-        <option value="Other">Other</option>
-      </select>
-    </div>
-    <div>
-      <label>Mobile:</label><br>
-      <input type="text" id="mobile">
-    </div>
-    <div>
-      <label>Address:</label><br>
-      <textarea id="address"></textarea>
-    </div>
-    <div>
-      <label>Parent Contact:</label><br>
-      <input type="text" id="parentsContact">
-    </div>
-    <br>
-    <button type="submit">Update Profile</button>
-  </form>
-
-  <br>
-  <a href="student_dashboard.html">Back to Dashboard</a>
-<script>
-    const API_BASE = "https://classtp.onrender.com"; // Assuming this is your live server
-    const studentEmail = localStorage.getItem('studentEmail');
-    let studentId; // This will hold the numeric ID for the PUT request
-
-    if (!studentEmail) {
-        alert('Please login first.');
-        window.location.href = 'login.html';
-    } else {
-        // 1. Corrected the fetch URL to match the API route
-        fetch(`${API_BASE}/students/email/${studentEmail}`)
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error('Student not found');
-                }
-                return res.json();
-            })
-            // 2. Changed to handle a single object, not an array
-            .then(student => {
-                // 3. Used 'id' instead of '_id'
-                studentId = student.id;
-
-                // Populate the form with student data
-                document.getElementById('fullName').value = student.fullName || '';
-                document.getElementById('email').value = student.email || '';
-                
-                // Format date correctly for the input field
-                if (student.dob) {
-                    document.getElementById('dob').value = new Date(student.dob).toISOString().split('T')[0];
-                }
-                
-                document.getElementById('gender').value = student.gender || '';
-                document.getElementById('mobile').value = student.mobile || '';
-                document.getElementById('address').value = student.address || '';
-                document.getElementById('parentsContact').value = student.parentsContact || '';
-            })
-            .catch(err => {
-                console.error('Error fetching student data:', err);
-                alert(err.message);
-            });
-    }
-
-    document.getElementById('editForm').addEventListener('submit', e => {
-        e.preventDefault();
-
-        // Check if studentId has been fetched
-        if (!studentId) {
-            alert('Could not update profile. Student ID is missing.');
-            return;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
         }
 
-        const updatedStudent = {
-            fullName: document.getElementById('fullName').value,
-            dob: document.getElementById('dob').value,
-            gender: document.getElementById('gender').value,
-            mobile: document.getElementById('mobile').value,
-            address: document.getElementById('address').value,
-            parentsContact: document.getElementById('parentsContact').value
-        };
+        .container {
+            max-width: 500px;
+            margin: 40px auto;
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
 
-        // This fetch call was already correct, but it depends on the right studentId
-        fetch(`${API_BASE}/students/${studentId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updatedStudent)
-        })
-        .then(res => {
-            if (res.ok) {
-                alert('Profile updated successfully!');
-                window.location.href = 'student_dashboard.html'; // Redirect on success
-            } else {
-                alert('Error updating profile. Please try again.');
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        form div {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        input[disabled] {
+            background-color: #eee;
+            cursor: not-allowed;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            background-color: #5cb85c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            /* Button is now static, no hover effects */
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #5cb85c;
+            text-decoration: none; /* Removes underline */
+        }
+
+        .back-link:hover {
+            /* No underline on hover */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Edit Profile</h2>
+        <form id="editForm">
+            <div>
+                <label for="fullName">Full Name:</label>
+                <input type="text" id="fullName" required>
+            </div>
+            <div>
+                <label for="email">Email:</label>
+                <input type="email" id="email" disabled>
+            </div>
+            <div>
+                <label for="dob">Date of Birth:</label>
+                <input type="date" id="dob">
+            </div>
+            <div>
+                <label for="gender">Gender:</label>
+                <select id="gender">
+                    <option value="">Select</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div>
+                <label for="mobile">Mobile:</label>
+                <input type="text" id="mobile">
+            </div>
+            <div>
+                <label for="address">Address:</label>
+                <textarea id="address"></textarea>
+            </div>
+            <div>
+                <label for="parentsContact">Parent Contact:</label>
+                <input type="text" id="parentsContact">
+            </div>
+            <button type="submit">Update Profile</button>
+        </form>
+        <a href="student_dashboard.html" class="back-link">Back to Dashboard</a>
+    </div>
+
+    <script>
+        const API_BASE = "https://classtp.onrender.com";
+        const studentEmail = localStorage.getItem('studentEmail');
+        let studentId;
+
+        if (!studentEmail) {
+            alert('Please login first.');
+            window.location.href = 'login.html';
+        } else {
+            fetch(`${API_BASE}/students/email/${studentEmail}`)
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error('Student not found');
+                    }
+                    return res.json();
+                })
+                .then(student => {
+                    studentId = student.id;
+                    document.getElementById('fullName').value = student.fullName || '';
+                    document.getElementById('email').value = student.email || '';
+                    if (student.dob) {
+                        document.getElementById('dob').value = new Date(student.dob).toISOString().split('T')[0];
+                    }
+                    document.getElementById('gender').value = student.gender || '';
+                    document.getElementById('mobile').value = student.mobile || '';
+                    document.getElementById('address').value = student.address || '';
+                    document.getElementById('parentsContact').value = student.parentsContact || '';
+                })
+                .catch(err => {
+                    console.error('Error fetching student data:', err);
+                    alert(err.message);
+                });
+        }
+
+        document.getElementById('editForm').addEventListener('submit', e => {
+            e.preventDefault();
+
+            if (!studentId) {
+                alert('Could not update profile. Student ID is missing.');
+                return;
             }
-        })
-        .catch(err => {
-            console.error('Error updating profile:', err);
-            alert('An error occurred: ' + err.message);
+
+            const updatedStudent = {
+                fullName: document.getElementById('fullName').value,
+                dob: document.getElementById('dob').value,
+                gender: document.getElementById('gender').value,
+                mobile: document.getElementById('mobile').value,
+                address: document.getElementById('address').value,
+                parentsContact: document.getElementById('parentsContact').value
+            };
+
+            fetch(`${API_BASE}/students/${studentId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedStudent)
+            })
+            .then(res => {
+                if (res.ok) {
+                    alert('Profile updated successfully!');
+                    window.location.href = 'student_dashboard.html';
+                } else {
+                    alert('Error updating profile. Please try again.');
+                }
+            })
+            .catch(err => {
+                console.error('Error updating profile:', err);
+                alert('An error occurred: ' + err.message);
+            });
         });
-    });
-</script>
+    </script>
 </body>
 </html>
