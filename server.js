@@ -74,15 +74,22 @@ app.get('/students', (req, res) => {
   });
 });
 
-// Update student by ID
+// ===================== UPDATED STUDENT EDIT ROUTE =====================
 app.put('/students/:id', (req, res) => {
   const studentId = req.params.id;
-  const { fullName, dob, gender, mobile, address, parentsContact, batch } = req.body;
-  const sql = `UPDATE students 
-    SET fullName = ?, dob = ?, gender = ?, mobile = ?, address = ?, parentsContact = ?, batch = ? 
-    WHERE id = ?`;
-  db.query(sql, [fullName, dob, gender, mobile, address, parentsContact, batch, studentId], (err) => {
-    if (err) return res.status(500).send('Error updating student');
+  const { fullName, dob, gender, mobile, address, parentsContact } = req.body;
+
+  const sql = `
+    UPDATE students 
+    SET fullName = ?, dob = ?, gender = ?, mobile = ?, address = ?, parentsContact = ? 
+    WHERE id = ?
+  `;
+
+  db.query(sql, [fullName, dob, gender, mobile, address, parentsContact, studentId], (err) => {
+    if (err) {
+      console.error('❌ Error updating student:', err);
+      return res.status(500).send('Error updating student');
+    }
     res.send('Student updated successfully');
   });
 });
@@ -98,8 +105,6 @@ app.delete('/students/:id', (req, res) => {
 });
 
 // ===================== FEES ROUTES =====================
-
-// Get fees for a student (with student details)
 app.get('/fees/student/:id', (req, res) => {
   const studentId = req.params.id;
   const sql = `
@@ -114,7 +119,6 @@ app.get('/fees/student/:id', (req, res) => {
   });
 });
 
-// Update fee status
 app.put('/fees/:id', (req, res) => {
   const feeId = req.params.id;
   const { status } = req.body;
@@ -125,7 +129,6 @@ app.put('/fees/:id', (req, res) => {
   });
 });
 
-// Apply or Update Fees by Batch
 app.post('/fees/batch', (req, res) => {
   const { batch, amount, dueDate } = req.body;
 
