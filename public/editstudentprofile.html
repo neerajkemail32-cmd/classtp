@@ -3,197 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Profile</title>
+    <title>My Profile</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            margin: 20px;
             background-color: #f4f4f4;
-            margin: 0;
-            padding: 20px;
         }
-
-        .container {
-            max-width: 500px;
+        .profile-container {
+            max-width: 600px;
             margin: 40px auto;
             background-color: #fff;
             padding: 20px;
             border: 1px solid #ccc;
             border-radius: 5px;
         }
-
         h2 {
             text-align: center;
             color: #333;
             margin-bottom: 20px;
         }
-
-        form div {
-            margin-bottom: 15px;
+        .profile-info p {
+            margin: 10px 0;
+            line-height: 1.6;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
         }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
+        .profile-info p:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .profile-info strong {
+            display: inline-block;
+            width: 150px;
+            color: #555;
             font-weight: bold;
         }
-
-        input[type="text"],
-        input[type="email"],
-        input[type="date"],
-        select,
-        textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        input[disabled] {
-            background-color: #eee;
-            cursor: not-allowed;
-        }
-
-        textarea {
-            resize: vertical;
-        }
-
-        button[type="submit"] {
-            width: 100%;
-            padding: 10px;
-            background-color: #5cb85c;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-            /* Button is now static, no hover effects */
-        }
-
         .back-link {
             display: block;
             text-align: center;
             margin-top: 20px;
             color: #5cb85c;
-            text-decoration: none; /* Removes underline */
+            text-decoration: none;
         }
-
         .back-link:hover {
-            /* No underline on hover */
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Edit Profile</h2>
-        <form id="editForm">
-            <div>
-                <label for="fullName">Full Name:</label>
-                <input type="text" id="fullName" required>
-            </div>
-            <div>
-                <label for="email">Email:</label>
-                <input type="email" id="email" disabled>
-            </div>
-            <div>
-                <label for="dob">Date of Birth:</label>
-                <input type="date" id="dob">
-            </div>
-            <div>
-                <label for="gender">Gender:</label>
-                <select id="gender">
-                    <option value="">Select</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                </select>
-            </div>
-            <div>
-                <label for="mobile">Mobile:</label>
-                <input type="text" id="mobile">
-            </div>
-            <div>
-                <label for="address">Address:</label>
-                <textarea id="address"></textarea>
-            </div>
-            <div>
-                <label for="parentsContact">Parent Contact:</label>
-                <input type="text" id="parentsContact">
-            </div>
-            <button type="submit">Update Profile</button>
-        </form>
-        <a href="student_dashboard.html" class="back-link">Back to Dashboard</a>
+
+    <div class="profile-container">
+        <h2>Student Profile</h2>
+        <div class="profile-info">
+            <p><strong>Full Name:</strong> <span id="fullName"></span></p>
+            <p><strong>Email:</strong> <span id="email"></span></p>
+            <p><strong>Mobile:</strong> <span id="mobile"></span></p>
+            <p><strong>Batch:</strong> <span id="batch"></span></p>
+            <p><strong>Date of Birth:</strong> <span id="dob"></span></p>
+            <p><strong>Gender:</strong> <span id="gender"></span></p>
+            <p><strong>Address:</strong> <span id="address"></span></p>
+            <p><strong>Parent's Contact:</strong> <span id="parentsContact"></span></p>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="student_dashboard.html" class="back-link">Back to Dashboard</a>
+        </div>
     </div>
 
     <script>
         const API_BASE = "https://classtp.onrender.com";
         const studentEmail = localStorage.getItem('studentEmail');
-        let studentId;
 
-        if (!studentEmail) {
-            alert('Please login first.');
-            window.location.href = 'login.html';
-        } else {
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-GB');
+        }
+
+        window.onload = () => {
+            if (!studentEmail) {
+                alert('Please login first.');
+                window.location.href = 'login.html';
+                return;
+            }
+
             fetch(`${API_BASE}/students/email/${studentEmail}`)
                 .then(res => {
                     if (!res.ok) {
-                        throw new Error('Student not found');
+                        throw new Error('Could not fetch profile data.');
                     }
                     return res.json();
                 })
                 .then(student => {
-                    studentId = student.id;
-                    document.getElementById('fullName').value = student.fullName || '';
-                    document.getElementById('email').value = student.email || '';
-                    if (student.dob) {
-                        document.getElementById('dob').value = new Date(student.dob).toISOString().split('T')[0];
-                    }
-                    document.getElementById('gender').value = student.gender || '';
-                    document.getElementById('mobile').value = student.mobile || '';
-                    document.getElementById('address').value = student.address || '';
-                    document.getElementById('parentsContact').value = student.parentsContact || '';
+                    document.getElementById('fullName').textContent = student.fullName || 'N/A';
+                    document.getElementById('email').textContent = student.email || 'N/A';
+                    document.getElementById('mobile').textContent = student.mobile || 'N/A';
+                    document.getElementById('batch').textContent = student.batch || 'N/A';
+                    document.getElementById('dob').textContent = formatDate(student.dob);
+                    document.getElementById('gender').textContent = student.gender || 'N/A';
+                    document.getElementById('address').textContent = student.address || 'N/A';
+                    document.getElementById('parentsContact').textContent = student.parentsContact || 'N/A';
                 })
                 .catch(err => {
-                    console.error('Error fetching student data:', err);
+                    console.error('Error:', err);
                     alert(err.message);
                 });
-        }
-
-        document.getElementById('editForm').addEventListener('submit', e => {
-            e.preventDefault();
-
-            if (!studentId) {
-                alert('Could not update profile. Student ID is missing.');
-                return;
-            }
-
-            const updatedStudent = {
-                fullName: document.getElementById('fullName').value,
-                dob: document.getElementById('dob').value,
-                gender: document.getElementById('gender').value,
-                mobile: document.getElementById('mobile').value,
-                address: document.getElementById('address').value,
-                parentsContact: document.getElementById('parentsContact').value
-            };
-
-            fetch(`${API_BASE}/students/${studentId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedStudent)
-            })
-            .then(res => {
-                if (res.ok) {
-                    alert('Profile updated successfully!');
-                    window.location.href = 'student_dashboard.html';
-                } else {
-                    alert('Error updating profile. Please try again.');
-                }
-            })
-            .catch(err => {
-                console.error('Error updating profile:', err);
-                alert('An error occurred: ' + err.message);
-            });
-        });
+        };
     </script>
+
 </body>
 </html>
