@@ -24,35 +24,19 @@ app.post('/register', (req, res) => {
 
   const sql = 'INSERT INTO users (fullName, email, mobile, password, role) VALUES (?, ?, ?, ?, ?)';
   db.query(sql, [fullName, email, mobile, password, role], (err) => {
-    if (err) {
-      console.error('❌ Error inserting user:', err);
-      return res.status(500).send('Error registering user');
-    }
-    console.log('✅ User registered:', email);
-    res.send('✅ User registered successfully');
+    if (err) return res.status(500).send('Error registering user');
+    res.send('User registered successfully');
   });
 });
 
 // ===================== LOGIN =====================
 app.post('/login', (req, res) => {
   const { email, password, role } = req.body;
-
-  console.log(`[LOGIN ATTEMPT] Email: ${email}, Role: ${role}`);
-
   const sql = 'SELECT * FROM users WHERE email = ? AND password = ? AND role = ?';
   db.query(sql, [email, password, role], (err, results) => {
-    if (err) {
-      console.error('❌ Login query error:', err);
-      return res.status(500).send('Server error');
-    }
-
-    if (results.length > 0) {
-      console.log('✅ Login successful for:', email);
-      res.json({ success: true, role: results[0].role, email: results[0].email });
-    } else {
-      console.log('❌ Login failed for:', email);
-      res.status(401).json({ success: false, message: 'Invalid credentials' });
-    }
+    if (err) return res.status(500).send('Server error');
+    if (results.length > 0) res.json({ success: true, role: results[0].role, email: results[0].email });
+    else res.status(401).json({ success: false, message: 'Invalid credentials' });
   });
 });
 
@@ -63,27 +47,21 @@ app.get('/students/email/:email', (req, res) => {
   const email = req.params.email;
   const sql = 'SELECT * FROM students WHERE email = ?';
   db.query(sql, [email], (err, results) => {
-    if (err) {
-      console.error('❌ Error fetching student:', err);
-      return res.status(500).send('Server error');
-    }
-    if (results.length === 0) {
-      return res.status(404).send('Student not found');
-    }
+    if (err) return res.status(500).send('Server error');
+    if (results.length === 0) return res.status(404).send('Student not found');
     res.json(results[0]);
   });
 });
 
 // Add new student
 app.post('/students', (req, res) => {
-  const { fullName, email, mobile, batch } = req.body;
-  const sql = 'INSERT INTO students (fullName, email, mobile, batch) VALUES (?, ?, ?, ?)';
-  db.query(sql, [fullName, email, mobile, batch], (err) => {
-    if (err) {
-      console.error('❌ Error inserting student:', err);
-      return res.status(500).send('Failed to add student');
-    }
-    res.send('✅ Student added successfully');
+  const { fullName, email, mobile, batch, dob, gender, address, parentsContact } = req.body;
+  const sql = `INSERT INTO students 
+    (fullName, email, mobile, batch, dob, gender, address, parentsContact) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+  db.query(sql, [fullName, email, mobile, batch, dob, gender, address, parentsContact], (err) => {
+    if (err) return res.status(500).send('Failed to add student');
+    res.send('Student added successfully');
   });
 });
 
@@ -91,10 +69,7 @@ app.post('/students', (req, res) => {
 app.get('/students', (req, res) => {
   const sql = 'SELECT * FROM students';
   db.query(sql, (err, results) => {
-    if (err) {
-      console.error('❌ Error fetching all students:', err);
-      return res.status(500).send('Server error');
-    }
+    if (err) return res.status(500).send('Server error');
     res.json(results);
   });
 });
@@ -102,14 +77,13 @@ app.get('/students', (req, res) => {
 // Update student by ID
 app.put('/students/:id', (req, res) => {
   const studentId = req.params.id;
-  const { fullName, email, mobile, batch } = req.body;
-  const sql = 'UPDATE students SET fullName = ?, email = ?, mobile = ?, batch = ? WHERE id = ?';
-  db.query(sql, [fullName, email, mobile, batch, studentId], (err) => {
-    if (err) {
-      console.error('❌ Error updating student:', err);
-      return res.status(500).send('Error updating student');
-    }
-    res.send('✅ Student updated successfully');
+  const { fullName, dob, gender, mobile, address, parentsContact, batch } = req.body;
+  const sql = `UPDATE students 
+    SET fullName = ?, dob = ?, gender = ?, mobile = ?, address = ?, parentsContact = ?, batch = ? 
+    WHERE id = ?`;
+  db.query(sql, [fullName, dob, gender, mobile, address, parentsContact, batch, studentId], (err) => {
+    if (err) return res.status(500).send('Error updating student');
+    res.send('Student updated successfully');
   });
 });
 
@@ -118,11 +92,8 @@ app.delete('/students/:id', (req, res) => {
   const studentId = req.params.id;
   const sql = 'DELETE FROM students WHERE id = ?';
   db.query(sql, [studentId], (err) => {
-    if (err) {
-      console.error('❌ Error deleting student:', err);
-      return res.status(500).send('Error deleting student');
-    }
-    res.send('✅ Student deleted successfully');
+    if (err) return res.status(500).send('Error deleting student');
+    res.send('Student deleted successfully');
   });
 });
 
@@ -138,10 +109,7 @@ app.get('/fees/student/:id', (req, res) => {
     WHERE f.studentId = ?
   `;
   db.query(sql, [studentId], (err, results) => {
-    if (err) {
-      console.error('❌ Error fetching fees:', err);
-      return res.status(500).send('Server error');
-    }
+    if (err) return res.status(500).send('Server error');
     res.json(results);
   });
 });
@@ -152,11 +120,8 @@ app.put('/fees/:id', (req, res) => {
   const { status } = req.body;
   const sql = 'UPDATE fees SET status = ? WHERE id = ?';
   db.query(sql, [status, feeId], (err) => {
-    if (err) {
-      console.error('❌ Error updating fee:', err);
-      return res.status(500).send('Server error');
-    }
-    res.send('✅ Fee status updated successfully');
+    if (err) return res.status(500).send('Server error');
+    res.send('Fee status updated successfully');
   });
 });
 
@@ -166,14 +131,8 @@ app.post('/fees/batch', (req, res) => {
 
   const getStudents = "SELECT id FROM students WHERE batch = ?";
   db.query(getStudents, [batch], (err, students) => {
-    if (err) {
-      console.error("❌ Error fetching students:", err);
-      return res.status(500).send("Server error");
-    }
-
-    if (students.length === 0) {
-      return res.status(404).send("No students found in this batch");
-    }
+    if (err) return res.status(500).send("Server error");
+    if (students.length === 0) return res.status(404).send("No students found in this batch");
 
     const insertFee = `
       INSERT INTO fees (studentId, amount, status, dueDate) 
@@ -183,54 +142,39 @@ app.post('/fees/batch', (req, res) => {
 
     students.forEach(stu => {
       db.query(insertFee, [stu.id, amount, dueDate], (err2) => {
-        if (err2) {
-          console.error("❌ Error inserting/updating fee:", err2);
-        }
+        if (err2) console.error("Error inserting/updating fee:", err2);
       });
     });
 
-    res.send("✅ Fees applied to batch successfully");
+    res.send("Fees applied to batch successfully");
   });
 });
 
-// ===================== ANNOUNCEMENTS =================
-// Add announcement (date entered manually by admin)
+// ===================== ANNOUNCEMENTS =====================
 app.post('/announcements', (req, res) => {
-  const { title, message, date } = req.body;  // ⬅️ removed time
+  const { title, message, date } = req.body;
   const sql = "INSERT INTO announcements (title, message, date) VALUES (?, ?, ?)";
   db.query(sql, [title, message, date], (err) => {
-    if (err) {
-      console.error("Error posting announcement:", err);
-      return res.status(500).send("Error posting announcement");
-    }
+    if (err) return res.status(500).send("Error posting announcement");
     res.send("Announcement posted successfully");
   });
 });
 
-// Get all announcements
 app.get('/announcements', (req, res) => {
-  const sql = "SELECT id, title, message, date FROM announcements ORDER BY id DESC"; // ⬅️ only fetch date
+  const sql = "SELECT id, title, message, date FROM announcements ORDER BY id DESC";
   db.query(sql, (err, results) => {
-    if (err) {
-      console.error("Error fetching announcements:", err);
-      return res.status(500).send("Error fetching announcements");
-    }
+    if (err) return res.status(500).send("Error fetching announcements");
     res.json(results);
   });
 });
 
-// Delete announcement
 app.delete('/announcements/:id', (req, res) => {
   const sql = "DELETE FROM announcements WHERE id = ?";
   db.query(sql, [req.params.id], (err) => {
-    if (err) {
-      console.error("Error deleting announcement:", err);
-      return res.status(500).send("Server error");
-    }
+    if (err) return res.status(500).send("Server error");
     res.send("Announcement deleted");
   });
 });
-
 
 // ===================== STUDENT FEES VIEW =====================
 app.get('/fees/email/:email', (req, res) => {
@@ -242,10 +186,7 @@ app.get('/fees/email/:email', (req, res) => {
     WHERE s.email = ?
   `;
   db.query(sql, [email], (err, results) => {
-    if (err) {
-      console.error('❌ Error fetching student fees:', err);
-      return res.status(500).send('Server error');
-    }
+    if (err) return res.status(500).send('Server error');
     res.json(results);
   });
 });
@@ -254,36 +195,25 @@ app.get('/fees/email/:email', (req, res) => {
 app.get('/batches', (req, res) => {
   const sql = "SELECT DISTINCT batch FROM students";
   db.query(sql, (err, results) => {
-    if (err) {
-      console.error("❌ Error fetching batches:", err);
-      return res.status(500).send("Server error");
-    }
+    if (err) return res.status(500).send("Server error");
     const batches = results.map(r => r.batch);
     res.json(batches);
   });
 });
-// ===================== ATTENDANCE ROUTES =====================
 
-// Get students by batch (for admin to mark attendance)
+// ===================== ATTENDANCE ROUTES =====================
 app.get('/students/batch/:batch', (req, res) => {
   const { batch } = req.params;
   const sql = "SELECT id, fullName FROM students WHERE batch = ?";
   db.query(sql, [batch], (err, results) => {
-    if (err) {
-      console.error("❌ Error fetching students by batch:", err);
-      return res.status(500).send("Server error");
-    }
+    if (err) return res.status(500).send("Server error");
     res.json(results);
   });
 });
 
-// Save/Update attendance
 app.post('/attendance', (req, res) => {
   const { batch, date, statuses } = req.body;
-
-  if (!batch || !date || !statuses) {
-    return res.status(400).send("Missing data");
-  }
+  if (!batch || !date || !statuses) return res.status(400).send("Missing data");
 
   const sql = `
     INSERT INTO attendance (student_id, batch, date, status)
@@ -294,35 +224,26 @@ app.post('/attendance', (req, res) => {
   const promises = Object.entries(statuses).map(([studentId, status]) => {
     return new Promise((resolve, reject) => {
       db.query(sql, [studentId, batch, date, status], (err) => {
-        if (err) {
-          console.error("❌ Error saving attendance:", err);
-          reject(err);
-        } else {
-          resolve();
-        }
+        if (err) reject(err);
+        else resolve();
       });
     });
   });
 
   Promise.all(promises)
-    .then(() => res.send("✅ Attendance saved successfully"))
-    .catch(() => res.status(500).send("❌ Error saving attendance"));
+    .then(() => res.send("Attendance saved successfully"))
+    .catch(() => res.status(500).send("Error saving attendance"));
 });
 
-// Get attendance for a student (for student dashboard)
 app.get('/attendance/student/:id', (req, res) => {
   const studentId = req.params.id;
   const sql = "SELECT date, status FROM attendance WHERE student_id = ? ORDER BY date DESC";
   db.query(sql, [studentId], (err, results) => {
-    if (err) {
-      console.error("❌ Error fetching attendance:", err);
-      return res.status(500).send("Server error");
-    }
+    if (err) return res.status(500).send("Server error");
     res.json(results);
   });
 });
 
-// Get attendance by batch + date (optional for admin review)
 app.get('/attendance/batch/:batch/:date', (req, res) => {
   const { batch, date } = req.params;
   const sql = `
@@ -332,25 +253,15 @@ app.get('/attendance/batch/:batch/:date', (req, res) => {
     WHERE a.batch = ? AND a.date = ?
   `;
   db.query(sql, [batch, date], (err, results) => {
-    if (err) {
-      console.error("❌ Error fetching batch attendance:", err);
-      return res.status(500).send("Server error");
-    }
+    if (err) return res.status(500).send("Server error");
     res.json(results);
   });
 });
 
-
 // ===================== GLOBAL ERROR HANDLING =====================
-process.on('unhandledRejection', (err) => {
-  console.error('❌ Unhandled Rejection:', err);
-});
-process.on('uncaughtException', (err) => {
-  console.error('❌ Uncaught Exception:', err);
-});
+process.on('unhandledRejection', (err) => console.error('Unhandled Rejection:', err));
+process.on('uncaughtException', (err) => console.error('Uncaught Exception:', err));
 
 // ===================== START SERVER =====================
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

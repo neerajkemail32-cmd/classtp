@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Edit Profile</title>
+</head>
+<body>
+  <h2>Edit Profile</h2>
+
+  <form id="editForm">
+    <div>
+      <label>Full Name:</label><br>
+      <input type="text" id="fullName" required>
+    </div>
+    <div>
+      <label>Email:</label><br>
+      <input type="email" id="email" disabled>
+    </div>
+    <div>
+      <label>Date of Birth:</label><br>
+      <input type="date" id="dob">
+    </div>
+    <div>
+      <label>Gender:</label><br>
+      <select id="gender">
+        <option value="">Select</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div>
+      <label>Mobile:</label><br>
+      <input type="text" id="mobile">
+    </div>
+    <div>
+      <label>Address:</label><br>
+      <textarea id="address"></textarea>
+    </div>
+    <div>
+      <label>Parent Contact:</label><br>
+      <input type="text" id="parentsContact">
+    </div>
+    <br>
+    <button type="submit">Update Profile</button>
+  </form>
+
+  <br>
+  <a href="student-dashboard.html">Back to Dashboard</a>
+
+<script>
+const API_BASE = "https://classtp.onrender.com";
+const studentEmail = localStorage.getItem('studentEmail');
+let studentId;
+
+if (!studentEmail) {
+  alert('Please login first');
+  window.location.href = 'login.html';
+} else {
+  fetch(`${API_BASE}/students?email=${studentEmail}`)
+    .then(res => res.json())
+    .then(students => {
+      if (students.length === 0) throw new Error('Student not found');
+      const student = students[0];
+      studentId = student._id;
+      document.getElementById('fullName').value = student.fullName || '';
+      document.getElementById('email').value = student.email;
+      document.getElementById('dob').value = student.dob || '';
+      document.getElementById('gender').value = student.gender || '';
+      document.getElementById('mobile').value = student.mobile || '';
+      document.getElementById('address').value = student.address || '';
+      document.getElementById('parentsContact').value = student.parentsContact || '';
+    })
+    .catch(err => alert(err.message));
+}
+
+document.getElementById('editForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const updatedStudent = {
+    fullName: document.getElementById('fullName').value,
+    dob: document.getElementById('dob').value,
+    gender: document.getElementById('gender').value,
+    mobile: document.getElementById('mobile').value,
+    address: document.getElementById('address').value,
+    parentsContact: document.getElementById('parentsContact').value
+  };
+
+  fetch(`${API_BASE}/students/${studentId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updatedStudent)
+  })
+  .then(res => {
+    if (res.ok) alert('Profile updated successfully!');
+    else alert('Error updating profile');
+  })
+  .catch(err => alert('Error: ' + err.message));
+});
+</script>
+</body>
+</html>
