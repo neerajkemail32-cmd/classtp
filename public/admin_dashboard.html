@@ -10,88 +10,85 @@
     .hidden { display: none; }
     .box {
       background: white;
-      padding: 15px;
-      border-radius: 5px;
-      margin-top: 15px;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
   </style>
 </head>
 <body>
 
   <!-- Header -->
-  <div class="bg-dark text-white text-center p-2">
+  <div class="bg-dark text-white text-center p-3">
     <h3>Admin Dashboard</h3>
   </div>
 
-  <!-- Main Content -->
-  <div class="container box">
-  <!-- Main Menu -->
-  <div id="mainMenu">
+  <!-- Main Menu Section -->
+  <div class="container box" id="mainMenu">
     <h4>Welcome Admin</h4>
     <p>Choose what you want to do:</p>
 
     <div class="row text-center mt-4">
-      <div class="col-md">
-        <button class="btn btn-primary w-100 mb-2" onclick="openStudents()">Manage Students</button>
+      <div class="col-md-3 mb-2">
+        <button class="btn btn-primary w-100" onclick="openStudents()">Manage Students</button>
       </div>
-      <div class="col-md">
-        <a href="fees.html" class="btn btn-primary w-100 mb-2">Manage Fees</a>
+      <div class="col-md-3 mb-2">
+        <a href="fees.html" class="btn btn-primary w-100">Manage Fees</a>
       </div>
-      <div class="col-md">
-        <a href="announcements.html" class="btn btn-primary w-100 mb-2">Manage Announcements</a>
+      <div class="col-md-3 mb-2">
+        <a href="announcements.html" class="btn btn-primary w-100">Manage Announcements</a>
       </div>
-      <div class="col-md">
-        <a href="mark-attendance.html" class="btn btn-primary w-100 mb-2">Manage Attendance</a>
+      <div class="col-md-3 mb-2">
+        <a href="mark-attendance.html" class="btn btn-primary w-100">Manage Attendance</a>
       </div>
     </div>
   </div>
-</div>
-    <!-- Student Management -->
-    <div id="studentPage" class="hidden">
-      <button class="btn btn-secondary mb-2" onclick="goBack()">← Back</button>
-      <h4>Student Management</h4>
-      <hr>
 
-      <!-- Search Section -->
-      <input type="text" class="form-control mb-2" id="searchBox" placeholder="Type name or email">
-      <button class="btn btn-info w-100 mb-3" onclick="loadAllStudents()">Show All Students</button>
+  <!-- Student Management Section -->
+  <div class="container box hidden" id="studentPage">
+    <button class="btn btn-secondary mb-3" onclick="goBack()">← Back</button>
+    <h4>Student Management</h4>
+    <hr>
 
-      <!-- Add Student Section -->
-      <h5>Add New Student</h5>
-      <form id="studentForm" class="mb-3">
-        <input type="text" class="form-control mb-2" id="name" placeholder="Full Name" required>
-        <input type="email" class="form-control mb-2" id="email" placeholder="Email" required>
-        <input type="text" class="form-control mb-2" id="mobile" placeholder="Mobile" required>
-        <input type="text" class="form-control mb-2" id="batch" placeholder="Batch" required>
-        <button type="submit" class="btn btn-success w-100">Add Student</button>
-      </form>
+    <!-- Search Section -->
+    <input type="text" class="form-control mb-3" id="searchBox" placeholder="Type name or email">
+    <button class="btn btn-info w-100 mb-4" onclick="loadAllStudents()">Show All Students</button>
 
-      <!-- Students List -->
-      <h5>Students List</h5>
-      <table class="table table-bordered table-striped">
-        <thead class="table-dark">
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Mobile</th>
-            <th>Batch</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="studentsList">
-          <tr>
-            <td colspan="6" class="text-center">Click "Show All Students" to load data</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <!-- Add Student Section -->
+    <h5>Add New Student</h5>
+    <form id="studentForm" class="mb-4">
+      <input type="text" class="form-control mb-2" id="name" placeholder="Full Name" required>
+      <input type="email" class="form-control mb-2" id="email" placeholder="Email" required>
+      <input type="text" class="form-control mb-2" id="mobile" placeholder="Mobile" required>
+      <input type="text" class="form-control mb-2" id="batch" placeholder="Batch" required>
+      <button type="submit" class="btn btn-success w-100">Add Student</button>
+    </form>
+
+    <!-- Students List -->
+    <h5>Students List</h5>
+    <table class="table table-bordered table-striped">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Mobile</th>
+          <th>Batch</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="studentsList">
+        <tr>
+          <td colspan="6" class="text-center">Click "Show All Students" to load data</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
-  <!-- Your SAME JavaScript -->
+  <!-- JavaScript -->
   <script>
-    const API_BASE = "https://classtp.onrender.com"; // 🔑 Replace with your Render URL
-
+    const API_BASE = "https://classtp.onrender.com"; // Replace with your Render URL
     let allStudents = [];
 
     function openStudents() {
@@ -121,7 +118,6 @@
 
     function showStudents(students) {
       const tbody = document.getElementById('studentsList');
-      
       if (students.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" class="text-center">No students found</td></tr>';
         return;
