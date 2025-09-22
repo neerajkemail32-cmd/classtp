@@ -25,18 +25,27 @@
 
   <!-- Main Content -->
   <div class="container box">
+  <!-- Main Menu -->
+  <div id="mainMenu">
+    <h4>Welcome Admin</h4>
+    <p>Choose what you want to do:</p>
 
-    <!-- Main Menu -->
-    <div id="mainMenu">
-      <h4>Welcome Admin</h4>
-      <p>Choose what you want to do:</p>
-
-      <button class="btn btn-primary w-100 mb-2" onclick="openStudents()">Manage Students</button>
-      <a href="fees.html" class="btn btn-primary w-100 mb-2">Manage Fees</a>
-      <a href="announcements.html" class="btn btn-primary w-100 mb-2">Manage Announcements</a>
-       <a href="mark-attendance.html" class="btn btn-primary w-100 mb-2">Manage Attendance</a>
+    <div class="row text-center mt-4">
+      <div class="col-md">
+        <button class="btn btn-primary w-100 mb-2" onclick="openStudents()">Manage Students</button>
+      </div>
+      <div class="col-md">
+        <a href="fees.html" class="btn btn-primary w-100 mb-2">Manage Fees</a>
+      </div>
+      <div class="col-md">
+        <a href="announcements.html" class="btn btn-primary w-100 mb-2">Manage Announcements</a>
+      </div>
+      <div class="col-md">
+        <a href="mark-attendance.html" class="btn btn-primary w-100 mb-2">Manage Attendance</a>
+      </div>
     </div>
-
+  </div>
+</div>
     <!-- Student Management -->
     <div id="studentPage" class="hidden">
       <button class="btn btn-secondary mb-2" onclick="goBack()">← Back</button>
