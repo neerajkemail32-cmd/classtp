@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Management</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { 
+      background-color: #f0f8ff; 
+      padding-top: 20px;
+      font-family: Arial, sans-serif;
+    }
+    .container { 
+      background: white; 
+      padding: 20px; 
+      border-radius: 5px; 
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 1200px;
+    }
+    .hidden { display: none; }
+    h3 {
+      color: #000;
+      border-bottom: 2px solid #0066cc;
+      padding-bottom: 10px;
+    }
+    .btn-info { background-color: #0066cc; }
+    .btn-success { background-color: #008000; }
+    .btn-secondary { background-color: #555; }
+    .action-section {
+      background-color: #f5f5f5;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      border-left: 3px solid #0066cc;
+    }
+    .table th {
+      background-color: #0066cc;
+      color: white;
+    }
+    .table-striped tbody tr:nth-of-type(odd) {
+      background-color: #f0f8ff;
+    }
+    .edit-form {
+      background-color: #f9f9f9;
+      padding: 15px;
+      border-radius: 5px;
+      margin-top: 10px;
+      border: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h3>Student Management</h3>
+  
+  <!-- Action Buttons -->
+  <div class="mb-3">
+    <button class="btn btn-info me-2" id="searchBtn">Search Student</button>
+    <button class="btn btn-success me-2" id="addBtn">Add Student</button>
+    <button class="btn btn-secondary" id="loadAllBtn">Load All Students</button>
+  </div>
+
+  <!-- Search Section -->
+  <div id="searchSection" class="hidden action-section">
+    <h5>Search Students</h5>
+    <div class="row mb-2">
+      <div class="col-md-8">
+        <input type="text" class="form-control" id="searchBox" placeholder="Enter name or email">
+      </div>
+      <div class="col-md-4">
+        <button class="btn btn-primary w-100" id="searchBtnAction">Search</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Student Section -->
+  <div id="addSection" class="hidden action-section">
+    <h5>Add New Student</h5>
+    <form id="studentForm">
+      <div class="row">
+        <div class="col-md-6 mb-2">
+          <input type="text" class="form-control" id="name" placeholder="Full Name" required>
+        </div>
+        <div class="col-md-6 mb-2">
+          <input type="email" class="form-control" id="email" placeholder="Email" required>
+        </div>
+        <div class="col-md-6 mb-2">
+          <input type="text" class="form-control" id="mobile" placeholder="Mobile" required>
+        </div>
+        <div class="col-md-6 mb-2">
+          <input type="text" class="form-control" id="batch" placeholder="Batch" required>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-success w-100 mt-2">Add Student</button>
+    </form>
+  </div>
+
+  <!-- Edit Student Section -->
+  <div id="editSection" class="hidden action-section">
+    <h5>Edit Student</h5>
+    <form id="editForm">
+      <input type="hidden" id="editId">
+      <div class="row">
+        <div class="col-md-6 mb-2">
+          <input type="text" class="form-control" id="editName" placeholder="Full Name" required>
+        </div>
+        <div class="col-md-6 mb-2">
+          <input type="email" class="form-control" id="editEmail" placeholder="Email" required>
+        </div>
+        <div class="col-md-6 mb-2">
+          <input type="text" class="form-control" id="editMobile" placeholder="Mobile" required>
+        </div>
+        <div class="col-md-6 mb-2">
+          <input type="text" class="form-control" id="editBatch" placeholder="Batch" required>
+        </div>
+      </div>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-success flex-fill">Update Student</button>
+        <button type="button" class="btn btn-secondary" onclick="cancelEdit()">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Students List -->
+  <div id="studentsContainer" class="hidden">
+    <h5>Students List</h5>
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Mobile</th>
+            <th>Batch</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="studentsList">
+          <tr>
+            <td colspan="6" class="text-center">No data to display</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = "https://classtp.onrender.com"; // Replace with your server URL
+let allStudents = []; // Global variable to store all students
+
+// Show/hide sections
+document.getElementById('searchBtn').addEventListener('click', () => {
+  document.getElementById('searchSection').classList.toggle('hidden');
+  document.getElementById('addSection').classList.add('hidden');
+  document.getElementById('editSection').classList.add('hidden');
+});
+
+document.getElementById('addBtn').addEventListener('click', () => {
+  document.getElementById('addSection').classList.toggle('hidden');
+  document.getElementById('searchSection').classList.add('hidden');
+  document.getElementById('editSection').classList.add('hidden');
+});
+
+// Load all students
+document.getElementById('loadAllBtn').addEventListener('click', () => {
+  document.getElementById('studentsContainer').classList.remove('hidden');
+  fetchStudents();
+});
+
+// Search student by name/email
+document.getElementById('searchBtnAction').addEventListener('click', () => {
+  const searchText = document.getElementById('searchBox').value.trim().toLowerCase();
+  if(!searchText) { 
+    alert('Enter a name or email'); 
+    return; 
+  }
+  
+  document.getElementById('studentsContainer').classList.remove('hidden');
+  
+  // If we already have students, search locally
+  if (allStudents.length > 0) {
+    const filtered = allStudents.filter(s => 
+      s.fullName.toLowerCase().includes(searchText) || 
+      s.email.toLowerCase().includes(searchText)
+    );
+    showStudents(filtered);
+  } else {
+    // Otherwise fetch from API first
+    fetchStudents().then(() => {
+      const filtered = allStudents.filter(s => 
+        s.fullName.toLowerCase().includes(searchText) || 
+        s.email.toLowerCase().includes(searchText)
+      );
+      showStudents(filtered);
+    });
+  }
+});
+
+// Fetch all students from API
+function fetchStudents() {
+  const tbody = document.getElementById('studentsList');
+  tbody.innerHTML = '<tr><td colspan="6" class="text-center">Loading...</td></tr>';
+
+  return fetch(`${API_BASE}/students`)
+    .then(res => res.json())
+    .then(students => {
+      allStudents = students; // Store students globally
+      showStudents(students);
+      return students;
+    })
+    .catch(err => {
+      console.error(err);
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error loading students</td></tr>';
+    });
+}
+
+// Display students
+function showStudents(students) {
+  const tbody = document.getElementById('studentsList');
+  if(students.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center">No students found</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = '';
+  students.forEach(s => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${s.id}</td>
+        <td>${s.fullName}</td>
+        <td>${s.email}</td>
+        <td>${s.mobile}</td>
+        <td>${s.batch || 'N/A'}</td>
+        <td>
+          <button class="btn btn-sm btn-info me-1" onclick="viewStudent(${s.id})">View</button>
+          <button class="btn btn-sm btn-warning me-1" onclick="editStudent(${s.id})">Edit</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteStudent(${s.id})">Delete</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+// Add student
+document.getElementById('studentForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const newStudent = {
+    fullName: document.getElementById('name').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    mobile: document.getElementById('mobile').value.trim(),
+    batch: document.getElementById('batch').value.trim(),
+    password: '123456'
+  };
+
+  // Validation
+  if (!newStudent.fullName || !newStudent.email || !newStudent.mobile || !newStudent.batch) {
+    alert('Please fill in all fields');
+    return;
+  }
+
+  fetch(`${API_BASE}/students`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(newStudent)
+  })
+  .then(res => {
+    if(res.ok) {
+      alert('Student added successfully!');
+      document.getElementById('studentForm').reset();
+      document.getElementById('studentsContainer').classList.remove('hidden');
+      fetchStudents();
+    } else {
+      alert('Error adding student!');
+    }
+  })
+  .catch(err => alert('Error: ' + err.message));
+});
+
+// View student
+function viewStudent(id) {
+  const student = allStudents.find(s => s.id === id);
+  if (student) {
+    alert(`Student Details:\n\nName: ${student.fullName}\nEmail: ${student.email}\nMobile: ${student.mobile}\nBatch: ${student.batch || 'N/A'}`);
+  } else {
+    alert('Student not found in local data. Please reload the student list.');
+  }
+}
+
+// Edit student
+function editStudent(id) {
+  const student = allStudents.find(s => s.id === id);
+  if (student) {
+    // Show edit form and hide other sections
+    document.getElementById('editSection').classList.remove('hidden');
+    document.getElementById('addSection').classList.add('hidden');
+    document.getElementById('searchSection').classList.add('hidden');
+    
+    // Fill form with student data
+    document.getElementById('editId').value = student.id;
+    document.getElementById('editName').value = student.fullName;
+    document.getElementById('editEmail').value = student.email;
+    document.getElementById('editMobile').value = student.mobile;
+    document.getElementById('editBatch').value = student.batch || '';
+  } else {
+    alert('Student not found in local data. Please reload the student list.');
+  }
+}
+
+// Cancel edit
+function cancelEdit() {
+  document.getElementById('editSection').classList.add('hidden');
+  document.getElementById('editForm').reset();
+}
+
+// Update student
+document.getElementById('editForm').addEventListener('submit', e => {
+  e.preventDefault();
+  
+  const id = document.getElementById('editId').value;
+  const updatedStudent = {
+    fullName: document.getElementById('editName').value.trim(),
+    email: document.getElementById('editEmail').value.trim(),
+    mobile: document.getElementById('editMobile').value.trim(),
+    batch: document.getElementById('editBatch').value.trim()
+  };
+
+  // Validation
+  if (!updatedStudent.fullName || !updatedStudent.email || !updatedStudent.mobile || !updatedStudent.batch) {
+    alert('Please fill in all fields');
+    return;
+  }
+
+  fetch(`${API_BASE}/students/${id}`, {
+    method: 'PUT',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(updatedStudent)
+  })
+  .then(res => {
+    if(res.ok) {
+      alert('Student updated successfully!');
+      document.getElementById('editSection').classList.add('hidden');
+      document.getElementById('editForm').reset();
+      fetchStudents();
+    } else {
+      alert('Error updating student!');
+    }
+  })
+  .catch(err => alert('Error: ' + err.message));
+});
+
+// Delete student
+function deleteStudent(id) {
+  if(!confirm('Are you sure you want to delete this student?')) return;
+  
+  fetch(`${API_BASE}/students/${id}`, { method: 'DELETE' })
+    .then(res => {
+      if (res.ok) {
+        alert('Student deleted successfully!');
+        fetchStudents();
+      } else {
+        alert('Error deleting student!');
+      }
+    })
+    .catch(err => alert('Error: ' + err.message));
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
