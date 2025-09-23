@@ -49,7 +49,7 @@ app.post('/register', async (req, res) => {
             console.error('❌ Error inserting student:', err2);
             return res.status(500).send('Error creating student profile');
           }
-          res.send('User registered successfully');
+          res.json({ success: true, message: 'User registered successfully' });
         });
       }
     );
@@ -65,24 +65,21 @@ app.post('/login', (req, res) => {
   const sql = 'SELECT * FROM users WHERE email = ?';
 
   db.query(sql, [email], async (err, results) => {
-    if (err) return res.status(500).send('Server error');
+    if (err) return res.status(500).json({ success: false, message: 'Server error' });
     if (results.length === 0)
-      return res
-        .status(401)
-        .json({ success: false, message: 'Invalid credentials' });
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
 
     const user = results[0];
     const match = await bcrypt.compare(password, user.password);
 
     if (!match)
-      return res
-        .status(401)
-        .json({ success: false, message: 'Invalid credentials' });
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
 
     if (user.role === 'student') {
       const studentSql = 'SELECT * FROM students WHERE user_id = ?';
       db.query(studentSql, [user.id], (err2, studentResults) => {
-        if (err2) return res.status(500).send('Server error');
+        if (err2) return res.status(500).json({ success: false, message: 'Server error' });
+
         return res.json({
           success: true,
           role: user.role,
@@ -90,8 +87,15 @@ app.post('/login', (req, res) => {
           profile: studentResults[0] || null,
         });
       });
+    } else if (user.role === 'admin') {
+      return res.json({
+        success: true,
+        role: user.role,
+        email: user.email,
+        profile: null,
+      });
     } else {
-      res.json({ success: true, role: user.role, email: user.email });
+      return res.status(400).json({ success: false, message: 'Unknown role' });
     }
   });
 });
@@ -161,7 +165,7 @@ app.post('/students', async (req, res) => {
               console.error('❌ Failed to add student:', err2);
               return res.status(500).send('Failed to add student');
             }
-            res.send('Student added successfully');
+            res.json({ success: true, message: 'Student added successfully' });
           }
         );
       }
@@ -231,7 +235,7 @@ app.put('/students/:id', (req, res) => {
             console.error('❌ Error syncing user:', err2);
             return res.status(500).send('Error syncing user data');
           }
-          res.send('Student updated successfully');
+          res.json({ success: true, message: 'Student updated successfully' });
         }
       );
     }
@@ -256,7 +260,7 @@ app.delete('/students/:id', (req, res) => {
       const deleteUser = 'DELETE FROM users WHERE id = ?';
       db.query(deleteUser, [userId], (err3) => {
         if (err3) return res.status(500).send('Error deleting user');
-        res.send('Student and linked user deleted successfully');
+        res.json({ success: true, message: 'Student and linked user deleted successfully' });
       });
     });
   });
@@ -283,7 +287,7 @@ app.put('/fees/:id', (req, res) => {
   const sql = 'UPDATE fees SET status = ? WHERE id = ?';
   db.query(sql, [status, feeId], (err) => {
     if (err) return res.status(500).send('Server error');
-    res.send('Fee status updated successfully');
+    res.json({ success: true, message: 'Fee status updated successfully' });
   });
 });
 
@@ -308,7 +312,7 @@ app.post('/fees/batch', (req, res) => {
       });
     });
 
-    res.send('Fees applied to batch successfully');
+    res.json({ success: true, message: 'Fees applied to batch successfully' });
   });
 });
 
@@ -319,7 +323,7 @@ app.post('/announcements', (req, res) => {
     'INSERT INTO announcements (title, message, date) VALUES (?, ?, ?)';
   db.query(sql, [title, message, date], (err) => {
     if (err) return res.status(500).send('Error posting announcement');
-    res.send('Announcement posted successfully');
+    res.json({ success: true, message: 'Announcement posted successfully' });
   });
 });
 
@@ -336,7 +340,7 @@ app.delete('/announcements/:id', (req, res) => {
   const sql = 'DELETE FROM announcements WHERE id = ?';
   db.query(sql, [req.params.id], (err) => {
     if (err) return res.status(500).send('Server error');
-    res.send('Announcement deleted');
+    res.json({ success: true, message: 'Announcement deleted' });
   });
 });
 
@@ -395,7 +399,7 @@ app.post('/attendance', (req, res) => {
   });
 
   Promise.all(promises)
-    .then(() => res.send('Attendance saved successfully'))
+    .then(() => res.json({ success: true, message: 'Attendance saved successfully' }))
     .catch(() => res.status(500).send('Error saving attendance'));
 });
 

@@ -73,16 +73,22 @@ form.addEventListener('submit', async (e) => {
     const data = await res.json();
 
     if (res.ok && data.success) {
-      if (data.role === 'student') {
-        // Save all necessary info for dashboard
-        localStorage.setItem('studentEmail', data.email);
-        localStorage.setItem('studentId', data.profile.id);
-        localStorage.setItem('userId', data.profile.user_id);
+      // ✅ Save common data
+      localStorage.setItem('userEmail', data.email);
+      localStorage.setItem('userRole', data.role);
 
+      if (data.role === 'student') {
+        // Store student-specific details
+        if (data.profile) {
+          localStorage.setItem('studentId', data.profile.id);   // from students table
+          localStorage.setItem('userId', data.profile.user_id); // from users table (FK)
+        }
         window.location.href = 'student_dashboard.html';
       } else if (data.role === 'admin') {
-        localStorage.setItem('adminEmail', data.email);
         window.location.href = 'admin_dashboard.html';
+      } else {
+        errorMsg.textContent = 'Invalid role. Please contact support.';
+        errorMsg.classList.remove('d-none');
       }
     } else {
       errorMsg.textContent = data.message || 'Login failed. Check credentials.';
