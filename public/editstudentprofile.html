@@ -142,6 +142,9 @@
         <input type="text" id="parentsContact" inputmode="numeric" />
       </div>
 
+      <!-- ✅ Hidden batch field -->
+      <input type="hidden" id="batch" />
+
       <button type="submit" id="submitBtn">Update Profile</button>
     </form>
 
@@ -214,6 +217,7 @@
           document.getElementById("mobile").value = student.mobile ?? (student.data && student.data.mobile) ?? "";
           document.getElementById("address").value = student.address ?? (student.data && student.data.address) ?? "";
           document.getElementById("parentsContact").value = student.parentsContact ?? (student.data && student.data.parentsContact) ?? "";
+          document.getElementById("batch").value = student.batch ?? ""; // ✅ store batch
         } catch (err) {
           console.error("Error fetching student data:", err);
           showMessage("An error occurred while loading profile: " + err.message, "error");
@@ -237,6 +241,7 @@
         const mobile = document.getElementById("mobile").value.trim();
         const address = document.getElementById("address").value.trim();
         const parentsContact = document.getElementById("parentsContact").value.trim();
+        const batch = document.getElementById("batch").value; // ✅ include batch
 
         if (!fullName) {
           showMessage("Full name is required.", "error");
@@ -254,7 +259,8 @@
 
         const updatedStudent = {
           fullName,
-          email: studentEmail,   // ✅ FIXED: keep email in body
+          email: studentEmail,
+          batch: batch || null,  // ✅ keep existing batch
           dob: dob || null,
           gender: gender || null,
           mobile: mobile || null,

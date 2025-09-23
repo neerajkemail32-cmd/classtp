@@ -130,11 +130,11 @@
       <table class="table table-bordered table-striped">
         <thead>
           <tr>
-            <th>ID</th>
             <th>Name</th>
             <th>Email</th>
             <th>Mobile</th>
             <th>Batch</th>
+            <th>Student ID</th> <!-- ✅ New column -->
             <th>Actions</th>
           </tr>
         </thead>
@@ -224,11 +224,11 @@ function showStudents(students) {
   students.forEach(s => {
     tbody.innerHTML += `
       <tr>
-        <td>${s.id}</td>
         <td>${s.fullName}</td>
         <td>${s.email}</td>
         <td>${s.mobile}</td>
         <td>${s.batch || 'N/A'}</td>
+        <td>${s.id}</td> <!-- ✅ Show student ID -->
         <td>
           <button class="btn btn-sm btn-info me-1" onclick="viewStudent(${s.id})">View</button>
           <button class="btn btn-sm btn-warning me-1" onclick="editStudent(${s.id})">Edit</button>

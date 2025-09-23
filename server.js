@@ -114,7 +114,7 @@ app.get('/students/email/:email', (req, res) => {
   });
 });
 
-// Admin adds new student (creates user + student)
+// Admin adds new student
 app.post('/students', async (req, res) => {
   try {
     const {
@@ -192,7 +192,7 @@ app.put('/students/:id', (req, res) => {
         return res.status(500).send('Error updating student');
       }
 
-      // Sync users table
+      // Sync only common fields
       const updateUser =
         'UPDATE users SET fullName = ?, email = ?, mobile = ? WHERE id = (SELECT user_id FROM students WHERE id = ?)';
       db.query(updateUser, [fullName, email, mobile, studentId], (err2) => {
