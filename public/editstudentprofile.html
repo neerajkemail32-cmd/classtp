@@ -168,11 +168,8 @@
 
       function formatDateForInput(d) {
         if (!d) return "";
-        // If already YYYY-MM-DD
         if (typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
-        // If ISO like 2023-08-10T00:00:00.000Z or other string with 'T'
         if (typeof d === "string" && d.includes("T")) return d.split("T")[0];
-        // Try Date parsing
         try {
           const dt = new Date(d);
           if (isNaN(dt)) return "";
@@ -182,7 +179,6 @@
         }
       }
 
-      // If studentEmail missing -> redirect to login
       if (!studentEmail) {
         alert("Please login first.");
         window.location.href = "login.html";
@@ -201,25 +197,16 @@
             throw new Error(`Failed to fetch student (${res.status}): ${text}`);
           }
           const student = await res.json();
-
-          // Support multiple shapes: student.id or student._id or student.studentId
           studentId = student.id ?? student._id ?? student.studentId ?? null;
-          if (!studentId) {
-            // Sometimes API wraps under data: { ... }
-            if (student.data && (student.data.id || student.data._id || student.data.studentId)) {
-              studentId = student.data.id ?? student.data._id ?? student.data.studentId;
-            }
+          if (!studentId && student.data) {
+            studentId = student.data.id ?? student.data._id ?? student.data.studentId;
           }
-
-          // For debugging: if no id found, log full response to console
           if (!studentId) {
             console.warn("No student id found in response. Server returned:", student);
-            showMessage("Profile loaded (no id found in server response). Changes may fail.", "info");
+            showMessage("Profile loaded (no id found). Changes may fail.", "info");
           } else {
             hideMessage();
           }
-
-          // Populate fields (use optional chaining)
           document.getElementById("fullName").value = student.fullName ?? student.name ?? (student.data && student.data.fullName) ?? "";
           document.getElementById("email").value = student.email ?? (student.data && student.data.email) ?? "";
           document.getElementById("dob").value = formatDateForInput(student.dob ?? (student.data && student.data.dob));
@@ -244,7 +231,6 @@
           return;
         }
 
-        // Basic client-side validation
         const fullName = document.getElementById("fullName").value.trim();
         const dob = document.getElementById("dob").value;
         const gender = document.getElementById("gender").value;
@@ -257,19 +243,18 @@
           return;
         }
 
-        // If mobile is provided, require 10 digits (adjust as needed)
         if (mobile && !/^\d{10}$/.test(mobile)) {
-          showMessage("Enter a valid 10-digit mobile number (digits only).", "error");
+          showMessage("Enter a valid 10-digit mobile number.", "error");
           return;
         }
-        if (parentsContact && !/^\d{10}$/.test(parentsContact) && !/^\d{7,15}$/.test(parentsContact)) {
-          // Accept 7-15 digits for parent contact (flexible)
-          showMessage("Enter a valid parent contact number (digits only).", "error");
+        if (parentsContact && !/^\d{7,15}$/.test(parentsContact)) {
+          showMessage("Enter a valid parent contact number.", "error");
           return;
         }
 
         const updatedStudent = {
           fullName,
+          email: studentEmail,   // ✅ FIXED: keep email in body
           dob: dob || null,
           gender: gender || null,
           mobile: mobile || null,
@@ -277,7 +262,6 @@
           parentsContact: parentsContact || null
         };
 
-        // Disable button while updating
         submitBtn.disabled = true;
         const prevText = submitBtn.textContent;
         submitBtn.textContent = "Updating...";
@@ -291,7 +275,6 @@
           });
 
           if (res.ok) {
-            // Some APIs return 200 with JSON, some return 204 No Content
             showMessage("Profile updated successfully! Redirecting...", "info");
             setTimeout(() => window.location.href = "student_dashboard.html", 800);
             return;
