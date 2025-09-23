@@ -11,7 +11,6 @@
       margin: 0;
       padding: 20px;
     }
-
     .container {
       max-width: 500px;
       margin: 40px auto;
@@ -20,79 +19,24 @@
       border: 1px solid #ccc;
       border-radius: 5px;
     }
-
-    h2 {
-      text-align: center;
-      color: #333;
-      margin-bottom: 20px;
+    h2 { text-align: center; color: #333; margin-bottom: 20px; }
+    form div { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input[type="text"], input[type="email"], input[type="date"], select, textarea {
+      width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
     }
-
-    form div {
-      margin-bottom: 15px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: bold;
-    }
-
-    input[type="text"],
-    input[type="email"],
-    input[type="date"],
-    select,
-    textarea {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-sizing: border-box;
-    }
-
-    input[disabled] {
-      background-color: #eee;
-      cursor: not-allowed;
-    }
-
-    textarea {
-      resize: vertical;
-    }
-
+    input[disabled] { background-color: #eee; cursor: not-allowed; }
+    textarea { resize: vertical; }
     button[type="submit"] {
-      width: 100%;
-      padding: 10px;
-      background-color: #5cb85c;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      font-size: 16px;
-      cursor: pointer;
+      width: 100%; padding: 10px;
+      background-color: #5cb85c; color: white;
+      border: none; border-radius: 4px;
+      font-size: 16px; cursor: pointer;
     }
-
-    .back-link {
-      display: block;
-      text-align: center;
-      margin-top: 20px;
-      color: #5cb85c;
-      text-decoration: none;
-    }
-
-    .alert {
-      padding: 10px;
-      border-radius: 4px;
-      margin-bottom: 12px;
-      display: none;
-    }
-    .alert.error {
-      background: #ffe6e6;
-      color: #b30000;
-      border: 1px solid #f5c2c2;
-    }
-    .alert.info {
-      background: #e6f7ff;
-      color: #004466;
-      border: 1px solid #cceeff;
-    }
+    .back-link { display: block; text-align: center; margin-top: 20px; color: #5cb85c; text-decoration: none; }
+    .alert { padding: 10px; border-radius: 4px; margin-bottom: 12px; display: none; }
+    .alert.error { background: #ffe6e6; color: #b30000; border: 1px solid #f5c2c2; }
+    .alert.info { background: #e6f7ff; color: #004466; border: 1px solid #cceeff; }
   </style>
 </head>
 <body>
@@ -102,49 +46,19 @@
     <div id="message" class="alert"></div>
 
     <form id="editForm" novalidate>
-      <div>
-        <label for="fullName">Full Name:</label>
-        <input type="text" id="fullName" required />
-      </div>
-
-      <div>
-        <label for="email">Email:</label>
-        <input type="email" id="email" disabled />
-      </div>
-
-      <div>
-        <label for="dob">Date of Birth:</label>
-        <input type="date" id="dob" />
-      </div>
-
+      <div><label for="fullName">Full Name:</label><input type="text" id="fullName" required /></div>
+      <div><label for="email">Email:</label><input type="email" id="email" disabled /></div>
+      <div><label for="dob">Date of Birth:</label><input type="date" id="dob" /></div>
       <div>
         <label for="gender">Gender:</label>
         <select id="gender">
-          <option value="">Select</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-          <option value="Other">Other</option>
+          <option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option>
         </select>
       </div>
-
-      <div>
-        <label for="mobile">Mobile:</label>
-        <input type="text" id="mobile" inputmode="numeric" />
-      </div>
-
-      <div>
-        <label for="address">Address:</label>
-        <textarea id="address" rows="3"></textarea>
-      </div>
-
-      <div>
-        <label for="parentsContact">Parent Contact:</label>
-        <input type="text" id="parentsContact" inputmode="numeric" />
-      </div>
-
-      <!-- ✅ Hidden batch field -->
+      <div><label for="mobile">Mobile:</label><input type="text" id="mobile" inputmode="numeric" /></div>
+      <div><label for="address">Address:</label><textarea id="address" rows="3"></textarea></div>
+      <div><label for="parentsContact">Parent Contact:</label><input type="text" id="parentsContact" inputmode="numeric" /></div>
       <input type="hidden" id="batch" />
-
       <button type="submit" id="submitBtn">Update Profile</button>
     </form>
 
@@ -154,7 +68,8 @@
   <script>
     (function () {
       const API_BASE = "https://classtp.onrender.com";
-      const studentEmail = localStorage.getItem("studentEmail");
+      const email = localStorage.getItem("userEmail");
+      const role = localStorage.getItem("userRole");
       const messageEl = document.getElementById("message");
       const form = document.getElementById("editForm");
       const submitBtn = document.getElementById("submitBtn");
@@ -165,25 +80,18 @@
         messageEl.className = "alert " + (type === "error" ? "error" : "info");
         messageEl.style.display = "block";
       }
-      function hideMessage() {
-        messageEl.style.display = "none";
-      }
+      function hideMessage() { messageEl.style.display = "none"; }
 
       function formatDateForInput(d) {
         if (!d) return "";
         if (typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
         if (typeof d === "string" && d.includes("T")) return d.split("T")[0];
-        try {
-          const dt = new Date(d);
-          if (isNaN(dt)) return "";
-          return dt.toISOString().split("T")[0];
-        } catch {
-          return "";
-        }
+        const dt = new Date(d);
+        return isNaN(dt) ? "" : dt.toISOString().split("T")[0];
       }
 
-      if (!studentEmail) {
-        alert("Please login first.");
+      if (!email || role !== "student") {
+        alert("Please login as student first.");
         window.location.href = "login.html";
         return;
       }
@@ -193,34 +101,23 @@
         hideMessage();
         showMessage("Loading profile...", "info");
         try {
-          const url = `${API_BASE}/students/email/${encodeURIComponent(studentEmail)}`;
-          const res = await fetch(url, { method: "GET" });
-          if (!res.ok) {
-            const text = await res.text().catch(() => res.statusText);
-            throw new Error(`Failed to fetch student (${res.status}): ${text}`);
-          }
+          const res = await fetch(`${API_BASE}/students/email/${encodeURIComponent(email)}`);
+          if (!res.ok) throw new Error(`Failed to fetch student (${res.status})`);
           const student = await res.json();
-          studentId = student.id ?? student._id ?? student.studentId ?? null;
-          if (!studentId && student.data) {
-            studentId = student.data.id ?? student.data._id ?? student.data.studentId;
-          }
-          if (!studentId) {
-            console.warn("No student id found in response. Server returned:", student);
-            showMessage("Profile loaded (no id found). Changes may fail.", "info");
-          } else {
-            hideMessage();
-          }
-          document.getElementById("fullName").value = student.fullName ?? student.name ?? (student.data && student.data.fullName) ?? "";
-          document.getElementById("email").value = student.email ?? (student.data && student.data.email) ?? "";
-          document.getElementById("dob").value = formatDateForInput(student.dob ?? (student.data && student.data.dob));
-          document.getElementById("gender").value = student.gender ?? (student.data && student.data.gender) ?? "";
-          document.getElementById("mobile").value = student.mobile ?? (student.data && student.data.mobile) ?? "";
-          document.getElementById("address").value = student.address ?? (student.data && student.data.address) ?? "";
-          document.getElementById("parentsContact").value = student.parentsContact ?? (student.data && student.data.parentsContact) ?? "";
-          document.getElementById("batch").value = student.batch ?? ""; // ✅ store batch
+          studentId = student.id ?? student._id ?? null;
+          hideMessage();
+
+          document.getElementById("fullName").value = student.fullName || "";
+          document.getElementById("email").value = student.email || "";
+          document.getElementById("dob").value = formatDateForInput(student.dob);
+          document.getElementById("gender").value = student.gender || "";
+          document.getElementById("mobile").value = student.mobile || "";
+          document.getElementById("address").value = student.address || "";
+          document.getElementById("parentsContact").value = student.parentsContact || "";
+          document.getElementById("batch").value = student.batch || "";
         } catch (err) {
           console.error("Error fetching student data:", err);
-          showMessage("An error occurred while loading profile: " + err.message, "error");
+          showMessage("Error loading profile: " + err.message, "error");
         }
       })();
 
@@ -230,8 +127,7 @@
         hideMessage();
 
         if (!studentId) {
-          showMessage("Could not update profile: Student ID is missing.", "error");
-          console.error("Missing studentId; cannot PUT.");
+          showMessage("Could not update profile: Student ID missing.", "error");
           return;
         }
 
@@ -241,7 +137,7 @@
         const mobile = document.getElementById("mobile").value.trim();
         const address = document.getElementById("address").value.trim();
         const parentsContact = document.getElementById("parentsContact").value.trim();
-        const batch = document.getElementById("batch").value; // ✅ include batch
+        const batch = document.getElementById("batch").value;
 
         if (!fullName) {
           showMessage("Full name is required.", "error");
@@ -257,24 +153,14 @@
           return;
         }
 
-        const updatedStudent = {
-          fullName,
-          email: studentEmail,
-          batch: batch || null,  // ✅ keep existing batch
-          dob: dob || null,
-          gender: gender || null,
-          mobile: mobile || null,
-          address: address || null,
-          parentsContact: parentsContact || null
-        };
+        const updatedStudent = { fullName, email, batch, dob, gender, mobile, address, parentsContact };
 
         submitBtn.disabled = true;
         const prevText = submitBtn.textContent;
         submitBtn.textContent = "Updating...";
 
         try {
-          const url = `${API_BASE}/students/${encodeURIComponent(studentId)}`;
-          const res = await fetch(url, {
+          const res = await fetch(`${API_BASE}/students/${encodeURIComponent(studentId)}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(updatedStudent)
@@ -283,14 +169,13 @@
           if (res.ok) {
             showMessage("Profile updated successfully! Redirecting...", "info");
             setTimeout(() => window.location.href = "student_dashboard.html", 800);
-            return;
           } else {
-            const text = await res.text().catch(() => res.statusText);
+            const text = await res.text();
             throw new Error(`Update failed (${res.status}): ${text}`);
           }
         } catch (err) {
           console.error("Error updating profile:", err);
-          showMessage("An error occurred while updating: " + err.message, "error");
+          showMessage("Error updating profile: " + err.message, "error");
         } finally {
           submitBtn.disabled = false;
           submitBtn.textContent = prevText;

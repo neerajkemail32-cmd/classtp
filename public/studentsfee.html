@@ -25,10 +25,12 @@
   </div>
 
   <script>
-    const email = localStorage.getItem("studentEmail");
+    const email = localStorage.getItem("userEmail");
+    const role = localStorage.getItem("userRole");
 
-    if (!email) {
-      alert("You must log in first!");
+    // ✅ Check login and role
+    if (!email || role !== "student") {
+      alert("Please login as student first!");
       window.location.href = "login.html";
     } else {
       // Get student record

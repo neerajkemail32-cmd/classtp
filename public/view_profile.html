@@ -11,7 +11,6 @@
             background-color: #f4f4f4;
         }
         .profile-container {
-            /* Card styles removed for a simpler look */
             max-width: 600px;
             margin: auto;
         }
@@ -25,7 +24,7 @@
         }
         .profile-info strong {
             display: inline-block;
-            width: 150px; /* Aligns the labels */
+            width: 150px;
             color: #555;
         }
     </style>
@@ -51,24 +50,23 @@
 
     <script>
         const API_BASE = "https://classtp.onrender.com";
-        const studentEmail = localStorage.getItem('studentEmail');
+        const email = localStorage.getItem('userEmail');
+        const role = localStorage.getItem('userRole');
 
-        // This function formats the date for better readability
         function formatDate(dateString) {
             if (!dateString) return 'N/A';
             const date = new Date(dateString);
-            return date.toLocaleDateString('en-GB'); // Format as DD/MM/YYYY
+            return date.toLocaleDateString('en-GB'); // DD/MM/YYYY
         }
 
         window.onload = () => {
-            if (!studentEmail) {
-                alert('Please login first.');
+            if (!email || role !== "student") {
+                alert('Please login as student first.');
                 window.location.href = 'login.html';
                 return;
             }
 
-            // Fetch student data from the server
-            fetch(`${API_BASE}/students/email/${studentEmail}`)
+            fetch(`${API_BASE}/students/email/${email}`)
                 .then(res => {
                     if (!res.ok) {
                         throw new Error('Could not fetch profile data.');
@@ -76,7 +74,6 @@
                     return res.json();
                 })
                 .then(student => {
-                    // Populate the HTML with the fetched data
                     document.getElementById('fullName').textContent = student.fullName || 'N/A';
                     document.getElementById('email').textContent = student.email || 'N/A';
                     document.getElementById('mobile').textContent = student.mobile || 'N/A';
