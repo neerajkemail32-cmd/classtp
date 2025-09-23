@@ -66,6 +66,9 @@
     const errorMsg = document.getElementById('errorMsg');
 
     form.addEventListener('submit', function (e) {
+      const fullName = form.fullName.value.trim();
+      const email = form.email.value.trim();
+      const mobile = form.mobile.value.trim();
       const password = form.password.value.trim();
       const confirmPassword = form['confirm-password'].value.trim();
 
@@ -73,15 +76,40 @@
       errorMsg.classList.add('d-none');
       errorMsg.textContent = '';
 
-      // Check password match
+      // ✅ Name validation (only alphabets + spaces)
+      if (!/^[A-Za-z ]+$/.test(fullName)) {
+        e.preventDefault();
+        errorMsg.textContent = 'Full name must contain only letters and spaces.';
+        errorMsg.classList.remove('d-none');
+        return;
+      }
+
+      // ✅ Email validation (basic check)
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        e.preventDefault();
+        errorMsg.textContent = 'Please enter a valid email address.';
+        errorMsg.classList.remove('d-none');
+        return;
+      }
+
+      // ✅ Mobile validation (10 digits only)
+      if (!/^\d{10}$/.test(mobile)) {
+        e.preventDefault();
+        errorMsg.textContent = 'Mobile number must be exactly 10 digits.';
+        errorMsg.classList.remove('d-none');
+        return;
+      }
+
+      // ✅ Password match
       if (password !== confirmPassword) {
-        e.preventDefault(); // stop form from submitting
+        e.preventDefault();
         errorMsg.textContent = 'Passwords do not match. Please try again.';
         errorMsg.classList.remove('d-none');
         return;
       }
 
-      // Optional: Password length check
+      // ✅ Password length
       if (password.length < 6) {
         e.preventDefault();
         errorMsg.textContent = 'Password must be at least 6 characters.';
