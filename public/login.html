@@ -26,20 +26,12 @@
 
       <form id="loginForm">
         <div class="mb-3">
-          <label for="email" class="form-label">Email or Username</label>
+          <label for="email" class="form-label">Email</label>
           <input type="text" class="form-control" id="email" name="email" required />
         </div>
         <div class="mb-3">
           <label for="password" class="form-label">Password</label>
           <input type="password" class="form-control" id="password" name="password" required />
-        </div>
-        <div class="mb-3">
-          <label for="role" class="form-label">Login As</label>
-          <select class="form-select" name="role" id="role" required>
-            <option value="">Select Role</option>
-            <option value="admin">Admin</option>
-            <option value="student">Student</option>
-          </select>
         </div>
         <div class="d-grid">
           <button type="submit" class="btn btn-primary">Login</button>
@@ -64,34 +56,35 @@ form.addEventListener('submit', async (e) => {
 
   const email = form.email.value.trim();
   const password = form.password.value.trim();
-  const role = form.role.value;
 
-  if (!email || !password || !role) {
+  if (!email || !password) {
     errorMsg.textContent = 'Please fill all fields.';
     errorMsg.classList.remove('d-none');
     return;
   }
 
   try {
-    // Use relative path so it works on Render deployment
     const res = await fetch('/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, role }),
+      body: JSON.stringify({ email, password }),
     });
 
     const data = await res.json();
 
     if (res.ok && data.success) {
-  if (role === 'student') {
-    // save email for later use
-    localStorage.setItem('studentEmail', email);
-    window.location.href = 'student_dashboard.html';
-  } else if (role === 'admin') {
-    window.location.href = 'admin_dashboard.html';
-  }
-}
- else {
+      if (data.role === 'student') {
+        // Save all necessary info for dashboard
+        localStorage.setItem('studentEmail', data.email);
+        localStorage.setItem('studentId', data.profile.id);
+        localStorage.setItem('userId', data.profile.user_id);
+
+        window.location.href = 'student_dashboard.html';
+      } else if (data.role === 'admin') {
+        localStorage.setItem('adminEmail', data.email);
+        window.location.href = 'admin_dashboard.html';
+      }
+    } else {
       errorMsg.textContent = data.message || 'Login failed. Check credentials.';
       errorMsg.classList.remove('d-none');
     }
