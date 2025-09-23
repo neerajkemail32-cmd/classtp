@@ -350,7 +350,7 @@ app.get('/attendance/batch/:batch/:date', (req, res) => {
     if (err) return res.status(500).send("Server error");
     res.json(results);
   });
-});n
+});
 
 // ===================== GLOBAL ERROR HANDLING =====================
 process.on('unhandledRejection', (err) => console.error('Unhandled Rejection:', err));
