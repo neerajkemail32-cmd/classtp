@@ -19,13 +19,14 @@
 <body>
 
   <!-- Header -->
-  <div class="bg-dark text-white text-center p-3">
-    <h3>Admin Dashboard</h3>
+  <div class="bg-dark text-white text-center p-3 d-flex justify-content-between align-items-center">
+    <h3 class="m-0">Admin Dashboard</h3>
+    <button id="logoutBtn" class="btn btn-outline-light btn-sm">Logout</button>
   </div>
 
   <!-- Main Menu Section -->
   <div class="container box" id="mainMenu">
-    <h4>Welcome Admin</h4>
+    <h4 id="welcomeMsg">Welcome Admin</h4>
     <p>Choose what you want to do:</p>
 
     <div class="row text-center mt-4">
@@ -43,6 +44,26 @@
       </div>
     </div>
   </div>
+
+  <!-- Scripts -->
+  <script>
+    const email = localStorage.getItem('userEmail');
+    const role = localStorage.getItem('userRole');
+
+    // ✅ Redirect if not admin or not logged in
+    if (!email || role !== 'admin') {
+      alert('Please login as Admin first.');
+      window.location.href = 'login.html';
+    } else {
+      document.getElementById('welcomeMsg').textContent = `Welcome Admin (${email})`;
+    }
+
+    // ✅ Logout clears all localStorage
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    });
+  </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

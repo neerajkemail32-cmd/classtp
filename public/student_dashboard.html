@@ -18,11 +18,10 @@
 
   <!-- Main Content -->
   <div class="container mt-4">
-    <h3>Welcome, Student!</h3>
+    <h3 id="welcomeMsg">Welcome, Student!</h3>
     <p class="text-muted">Choose an option below:</p>
 
     <div class="row text-center mt-4">
-      
       <div class="col-md">
         <a href="view_profile.html" class="btn btn-primary w-100">View Profile</a>
       </div>
@@ -31,26 +30,34 @@
       </div>
       <div class="col-md">
         <a href="studentsfee.html" class="btn btn-primary w-100">View Fees</a>
-        </div>
+      </div>
       <div class="col-md">
         <a href="student-attendance.html" class="btn btn-primary w-100">View Attendance</a>
       </div>
       <div class="col-md">
-        <a href="editstudentprofile.html" class="btn btn-primary w-100">edit profile</a>
+        <a href="editstudentprofile.html" class="btn btn-primary w-100">Edit Profile</a>
       </div>
     </div>
   </div>
 
   <!-- Scripts -->
   <script>
-    const email = localStorage.getItem('studentEmail');
-    if (!email) {
+    const email = localStorage.getItem('userEmail');
+    const role = localStorage.getItem('userRole');
+    const studentId = localStorage.getItem('studentId');
+
+    // ✅ Redirect if not student or not logged in
+    if (!email || role !== 'student') {
       alert('Please login first.');
       window.location.href = 'login.html';
+    } else {
+      // Show welcome message with email
+      document.getElementById('welcomeMsg').textContent = `Welcome, ${email}!`;
     }
 
+    // ✅ Logout clears all keys
     document.getElementById('logoutBtn').addEventListener('click', () => {
-      localStorage.removeItem('studentEmail');
+      localStorage.clear();
       window.location.href = 'login.html';
     });
   </script>
