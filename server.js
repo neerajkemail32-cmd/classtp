@@ -3,6 +3,7 @@ const express = require('express');
 const db = require('./db'); // Your db.js connection
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const bcrypt = require('bcrypt');
 
 const app = express();
 
@@ -19,55 +20,63 @@ app.use((req, res, next) => {
 });
 
 // ===================== USER REGISTRATION =====================
-app.post('/register', (req, res) => {
-  const { fullName, email, mobile, password } = req.body;
-  const role = 'student';
+app.post('/register', async (req, res) => {
+  try {
+    const { fullName, email, mobile, password } = req.body;
+    const role = 'student';
 
-  const insertUser = 'INSERT INTO users (fullName, email, mobile, password, role) VALUES (?, ?, ?, ?, ?)';
-  db.query(insertUser, [fullName, email, mobile, password, role], (err, result) => {
-    if (err) {
-      console.error('❌ Error inserting user:', err);
-      return res.status(500).send('Error registering user');
-    }
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const userId = result.insertId;
-
-    const insertStudent = `
-      INSERT INTO students (user_id, fullName, email, mobile)
-      VALUES (?, ?, ?, ?)
-    `;
-    db.query(insertStudent, [userId, fullName, email, mobile], (err2) => {
-      if (err2) {
-        console.error('❌ Error inserting student:', err2);
-        return res.status(500).send('Error creating student profile');
+    const insertUser = 'INSERT INTO users (fullName, email, mobile, password, role) VALUES (?, ?, ?, ?, ?)';
+    db.query(insertUser, [fullName, email, mobile, hashedPassword, role], (err, result) => {
+      if (err) {
+        console.error('❌ Error inserting user:', err);
+        return res.status(500).send('Error registering user');
       }
-      res.send('User registered successfully');
+
+      const userId = result.insertId;
+
+      const insertStudent = `
+        INSERT INTO students (user_id, fullName, email, mobile)
+        VALUES (?, ?, ?, ?)
+      `;
+      db.query(insertStudent, [userId, fullName, email, mobile], (err2) => {
+        if (err2) {
+          console.error('❌ Error inserting student:', err2);
+          return res.status(500).send('Error creating student profile');
+        }
+        res.send('User registered successfully');
+      });
     });
-  });
+  } catch (err) {
+    console.error('❌ Error in /register:', err);
+    res.status(500).send('Server error');
+  }
 });
 
 // ===================== LOGIN =====================
 app.post('/login', (req, res) => {
-  const { email, password, role } = req.body;
-  const sql = 'SELECT * FROM users WHERE email = ? AND password = ? AND role = ?';
-  db.query(sql, [email, password, role], (err, results) => {
+  const { email, password } = req.body;
+  const sql = 'SELECT * FROM users WHERE email = ?';
+
+  db.query(sql, [email], async (err, results) => {
     if (err) return res.status(500).send('Server error');
     if (results.length === 0) return res.status(401).json({ success: false, message: 'Invalid credentials' });
 
     const user = results[0];
+    const match = await bcrypt.compare(password, user.password);
 
-    if (role === 'student') {
+    if (!match) return res.status(401).json({ success: false, message: 'Invalid credentials' });
+
+    if (user.role === 'student') {
       const studentSql = 'SELECT * FROM students WHERE user_id = ?';
       db.query(studentSql, [user.id], (err2, studentResults) => {
         if (err2) return res.status(500).send('Server error');
-        if (studentResults.length === 0) {
-          return res.json({ success: true, role: user.role, email: user.email, profile: null });
-        }
         return res.json({
           success: true,
           role: user.role,
           email: user.email,
-          profile: studentResults[0]
+          profile: studentResults[0] || null
         });
       });
     } else {
@@ -89,25 +98,38 @@ app.get('/students/email/:email', (req, res) => {
   });
 });
 
-// Admin adds new student (must link to existing user_id)
-app.post('/students', (req, res) => {
-  const { user_id, fullName, email, mobile, batch, dob, gender, address, parentsContact } = req.body;
+// Admin adds new student (creates user + student)
+app.post('/students', async (req, res) => {
+  try {
+    const { fullName, email, mobile, batch, dob, gender, address, parentsContact, password } = req.body;
 
-  if (!user_id) {
-    return res.status(400).send("user_id is required to add a student");
+    const hashedPassword = await bcrypt.hash(password || '123456', 10);
+    const role = 'student';
+
+    const insertUser = 'INSERT INTO users (fullName, email, mobile, password, role) VALUES (?, ?, ?, ?, ?)';
+    db.query(insertUser, [fullName, email, mobile, hashedPassword, role], (err, result) => {
+      if (err) {
+        console.error('❌ Failed to add user:', err);
+        return res.status(500).send('Failed to add student');
+      }
+
+      const userId = result.insertId;
+      const insertStudent = `
+        INSERT INTO students (user_id, fullName, email, mobile, batch, dob, gender, address, parentsContact)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+      db.query(insertStudent, [userId, fullName, email, mobile, batch, dob, gender, address, parentsContact], (err2) => {
+        if (err2) {
+          console.error('❌ Failed to add student:', err2);
+          return res.status(500).send('Failed to add student');
+        }
+        res.send('Student added successfully');
+      });
+    });
+  } catch (err) {
+    console.error('❌ Error in /students:', err);
+    res.status(500).send('Server error');
   }
-
-  const sql = `INSERT INTO students 
-    (user_id, fullName, email, mobile, batch, dob, gender, address, parentsContact) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-
-  db.query(sql, [user_id, fullName, email, mobile, batch, dob, gender, address, parentsContact], (err) => {
-    if (err) {
-      console.error("❌ Failed to add student:", err);
-      return res.status(500).send('Failed to add student');
-    }
-    res.send('Student added successfully');
-  });
 });
 
 // Get all students
@@ -119,33 +141,56 @@ app.get('/students', (req, res) => {
   });
 });
 
-// ===================== UPDATED STUDENT EDIT ROUTE =====================
+// Update student + sync with users
 app.put('/students/:id', (req, res) => {
   const studentId = req.params.id;
-  const { fullName, dob, gender, mobile, address, parentsContact } = req.body;
+  const { fullName, email, mobile, batch, dob, gender, address, parentsContact } = req.body;
 
-  const sql = `
+  const updateStudent = `
     UPDATE students 
-    SET fullName = ?, dob = ?, gender = ?, mobile = ?, address = ?, parentsContact = ? 
+    SET fullName = ?, email = ?, mobile = ?, batch = ?, dob = ?, gender = ?, address = ?, parentsContact = ?
     WHERE id = ?
   `;
 
-  db.query(sql, [fullName, dob, gender, mobile, address, parentsContact, studentId], (err) => {
+  db.query(updateStudent, [fullName, email, mobile, batch, dob, gender, address, parentsContact, studentId], (err) => {
     if (err) {
       console.error('❌ Error updating student:', err);
       return res.status(500).send('Error updating student');
     }
-    res.send('Student updated successfully');
+
+    // Sync users table
+    const updateUser = 'UPDATE users SET fullName = ?, email = ?, mobile = ? WHERE id = (SELECT user_id FROM students WHERE id = ?)';
+    db.query(updateUser, [fullName, email, mobile, studentId], (err2) => {
+      if (err2) {
+        console.error('❌ Error syncing user:', err2);
+        return res.status(500).send('Error syncing user data');
+      }
+      res.send('Student updated successfully');
+    });
   });
 });
 
-// Delete student by ID
+// Delete student + linked user
 app.delete('/students/:id', (req, res) => {
   const studentId = req.params.id;
-  const sql = 'DELETE FROM students WHERE id = ?';
-  db.query(sql, [studentId], (err) => {
-    if (err) return res.status(500).send('Error deleting student');
-    res.send('Student deleted successfully');
+
+  const getUser = 'SELECT user_id FROM students WHERE id = ?';
+  db.query(getUser, [studentId], (err, results) => {
+    if (err) return res.status(500).send('Error fetching user_id');
+    if (results.length === 0) return res.status(404).send('Student not found');
+
+    const userId = results[0].user_id;
+
+    const deleteStudent = 'DELETE FROM students WHERE id = ?';
+    db.query(deleteStudent, [studentId], (err2) => {
+      if (err2) return res.status(500).send('Error deleting student');
+
+      const deleteUser = 'DELETE FROM users WHERE id = ?';
+      db.query(deleteUser, [userId], (err3) => {
+        if (err3) return res.status(500).send('Error deleting user');
+        res.send('Student and linked user deleted successfully');
+      });
+    });
   });
 });
 
@@ -312,4 +357,4 @@ process.on('uncaughtException', (err) => console.error('Uncaught Exception:', er
 
 // ===================== START SERVER =====================
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

@@ -90,7 +90,7 @@
           <input type="text" class="form-control" id="mobile" placeholder="Mobile" required>
         </div>
         <div class="col-md-6 mb-2">
-          <input type="text" class="form-control" id="batch" placeholder="Batch" required>
+          <input type="text" class="form-control" id="batch" placeholder="Batch (e.g. A, B, C)" required>
         </div>
       </div>
       <button type="submit" class="btn btn-success w-100 mt-2">Add Student</button>
@@ -113,7 +113,7 @@
           <input type="text" class="form-control" id="editMobile" placeholder="Mobile" required>
         </div>
         <div class="col-md-6 mb-2">
-          <input type="text" class="form-control" id="editBatch" placeholder="Batch" required>
+          <input type="text" class="form-control" id="editBatch" placeholder="Batch (e.g. A, B, C)" required>
         </div>
       </div>
       <div class="d-flex gap-2">
@@ -171,17 +171,14 @@ document.getElementById('loadAllBtn').addEventListener('click', () => {
   fetchStudents();
 });
 
-// Search student by name/email
+// Search student
 document.getElementById('searchBtnAction').addEventListener('click', () => {
   const searchText = document.getElementById('searchBox').value.trim().toLowerCase();
   if(!searchText) { 
     alert('Enter a name or email'); 
     return; 
   }
-  
   document.getElementById('studentsContainer').classList.remove('hidden');
-  
-  // If we already have students, search locally
   if (allStudents.length > 0) {
     const filtered = allStudents.filter(s => 
       s.fullName.toLowerCase().includes(searchText) || 
@@ -189,7 +186,6 @@ document.getElementById('searchBtnAction').addEventListener('click', () => {
     );
     showStudents(filtered);
   } else {
-    // Otherwise fetch from API first
     fetchStudents().then(() => {
       const filtered = allStudents.filter(s => 
         s.fullName.toLowerCase().includes(searchText) || 
@@ -200,15 +196,14 @@ document.getElementById('searchBtnAction').addEventListener('click', () => {
   }
 });
 
-// Fetch all students from API
+// Fetch all students
 function fetchStudents() {
   const tbody = document.getElementById('studentsList');
   tbody.innerHTML = '<tr><td colspan="6" class="text-center">Loading...</td></tr>';
-
   return fetch(`${API_BASE}/students`)
     .then(res => res.json())
     .then(students => {
-      allStudents = students; // Store students globally
+      allStudents = students;
       showStudents(students);
       return students;
     })
@@ -225,7 +220,6 @@ function showStudents(students) {
     tbody.innerHTML = '<tr><td colspan="6" class="text-center">No students found</td></tr>';
     return;
   }
-
   tbody.innerHTML = '';
   students.forEach(s => {
     tbody.innerHTML += `
@@ -255,13 +249,10 @@ document.getElementById('studentForm').addEventListener('submit', e => {
     batch: document.getElementById('batch').value.trim(),
     password: '123456'
   };
-
-  // Validation
   if (!newStudent.fullName || !newStudent.email || !newStudent.mobile || !newStudent.batch) {
     alert('Please fill in all fields');
     return;
   }
-
   fetch(`${API_BASE}/students`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -280,46 +271,28 @@ document.getElementById('studentForm').addEventListener('submit', e => {
   .catch(err => alert('Error: ' + err.message));
 });
 
-// View student
-function viewStudent(id) {
-  const student = allStudents.find(s => s.id === id);
-  if (student) {
-    alert(`Student Details:\n\nName: ${student.fullName}\nEmail: ${student.email}\nMobile: ${student.mobile}\nBatch: ${student.batch || 'N/A'}`);
-  } else {
-    alert('Student not found in local data. Please reload the student list.');
-  }
-}
-
 // Edit student
 function editStudent(id) {
   const student = allStudents.find(s => s.id === id);
   if (student) {
-    // Show edit form and hide other sections
     document.getElementById('editSection').classList.remove('hidden');
     document.getElementById('addSection').classList.add('hidden');
     document.getElementById('searchSection').classList.add('hidden');
-    
-    // Fill form with student data
     document.getElementById('editId').value = student.id;
     document.getElementById('editName').value = student.fullName;
     document.getElementById('editEmail').value = student.email;
     document.getElementById('editMobile').value = student.mobile;
     document.getElementById('editBatch').value = student.batch || '';
   } else {
-    alert('Student not found in local data. Please reload the student list.');
+    alert('Student not found. Reload the list.');
   }
 }
-
-// Cancel edit
 function cancelEdit() {
   document.getElementById('editSection').classList.add('hidden');
   document.getElementById('editForm').reset();
 }
-
-// Update student
 document.getElementById('editForm').addEventListener('submit', e => {
   e.preventDefault();
-  
   const id = document.getElementById('editId').value;
   const updatedStudent = {
     fullName: document.getElementById('editName').value.trim(),
@@ -327,13 +300,10 @@ document.getElementById('editForm').addEventListener('submit', e => {
     mobile: document.getElementById('editMobile').value.trim(),
     batch: document.getElementById('editBatch').value.trim()
   };
-
-  // Validation
   if (!updatedStudent.fullName || !updatedStudent.email || !updatedStudent.mobile || !updatedStudent.batch) {
     alert('Please fill in all fields');
     return;
   }
-
   fetch(`${API_BASE}/students/${id}`, {
     method: 'PUT',
     headers: {'Content-Type': 'application/json'},
@@ -355,7 +325,6 @@ document.getElementById('editForm').addEventListener('submit', e => {
 // Delete student
 function deleteStudent(id) {
   if(!confirm('Are you sure you want to delete this student?')) return;
-  
   fetch(`${API_BASE}/students/${id}`, { method: 'DELETE' })
     .then(res => {
       if (res.ok) {
