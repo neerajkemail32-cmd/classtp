@@ -3,7 +3,8 @@ const express = require('express');
 const db = require('./db'); // Your db.js connection
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
+
 
 const app = express();
 
@@ -349,7 +350,7 @@ app.get('/attendance/batch/:batch/:date', (req, res) => {
     if (err) return res.status(500).send("Server error");
     res.json(results);
   });
-});
+});n
 
 // ===================== GLOBAL ERROR HANDLING =====================
 process.on('unhandledRejection', (err) => console.error('Unhandled Rejection:', err));
