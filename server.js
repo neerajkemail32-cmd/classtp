@@ -1,3 +1,4 @@
+// server.js
 const express = require('express');
 const db = require('./db'); // Your db.js connection
 const bodyParser = require('body-parser');
@@ -22,10 +23,26 @@ app.post('/register', (req, res) => {
   const { fullName, email, mobile, password } = req.body;
   const role = 'student';
 
-  const sql = 'INSERT INTO users (fullName, email, mobile, password, role) VALUES (?, ?, ?, ?, ?)';
-  db.query(sql, [fullName, email, mobile, password, role], (err) => {
-    if (err) return res.status(500).send('Error registering user');
-    res.send('User registered successfully');
+  const insertUser = 'INSERT INTO users (fullName, email, mobile, password, role) VALUES (?, ?, ?, ?, ?)';
+  db.query(insertUser, [fullName, email, mobile, password, role], (err, result) => {
+    if (err) {
+      console.error('❌ Error inserting user:', err);
+      return res.status(500).send('Error registering user');
+    }
+
+    const userId = result.insertId;
+
+    const insertStudent = `
+      INSERT INTO students (user_id, fullName, email, mobile)
+      VALUES (?, ?, ?, ?)
+    `;
+    db.query(insertStudent, [userId, fullName, email, mobile], (err2) => {
+      if (err2) {
+        console.error('❌ Error inserting student:', err2);
+        return res.status(500).send('Error creating student profile');
+      }
+      res.send('User registered successfully');
+    });
   });
 });
 
@@ -35,8 +52,27 @@ app.post('/login', (req, res) => {
   const sql = 'SELECT * FROM users WHERE email = ? AND password = ? AND role = ?';
   db.query(sql, [email, password, role], (err, results) => {
     if (err) return res.status(500).send('Server error');
-    if (results.length > 0) res.json({ success: true, role: results[0].role, email: results[0].email });
-    else res.status(401).json({ success: false, message: 'Invalid credentials' });
+    if (results.length === 0) return res.status(401).json({ success: false, message: 'Invalid credentials' });
+
+    const user = results[0];
+
+    if (role === 'student') {
+      const studentSql = 'SELECT * FROM students WHERE user_id = ?';
+      db.query(studentSql, [user.id], (err2, studentResults) => {
+        if (err2) return res.status(500).send('Server error');
+        if (studentResults.length === 0) {
+          return res.json({ success: true, role: user.role, email: user.email, profile: null });
+        }
+        return res.json({
+          success: true,
+          role: user.role,
+          email: user.email,
+          profile: studentResults[0]
+        });
+      });
+    } else {
+      res.json({ success: true, role: user.role, email: user.email });
+    }
   });
 });
 
@@ -53,14 +89,23 @@ app.get('/students/email/:email', (req, res) => {
   });
 });
 
-// Add new student
+// Admin adds new student (must link to existing user_id)
 app.post('/students', (req, res) => {
-  const { fullName, email, mobile, batch, dob, gender, address, parentsContact } = req.body;
+  const { user_id, fullName, email, mobile, batch, dob, gender, address, parentsContact } = req.body;
+
+  if (!user_id) {
+    return res.status(400).send("user_id is required to add a student");
+  }
+
   const sql = `INSERT INTO students 
-    (fullName, email, mobile, batch, dob, gender, address, parentsContact) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-  db.query(sql, [fullName, email, mobile, batch, dob, gender, address, parentsContact], (err) => {
-    if (err) return res.status(500).send('Failed to add student');
+    (user_id, fullName, email, mobile, batch, dob, gender, address, parentsContact) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+  db.query(sql, [user_id, fullName, email, mobile, batch, dob, gender, address, parentsContact], (err) => {
+    if (err) {
+      console.error("❌ Failed to add student:", err);
+      return res.status(500).send('Failed to add student');
+    }
     res.send('Student added successfully');
   });
 });
