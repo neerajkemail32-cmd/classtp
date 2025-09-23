@@ -10,7 +10,7 @@ const app = express();
 // ===================== MIDDLEWARE =====================
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(bodyParser.json()));
 app.use(express.static('public')); // Serve static files
 
 // ===================== LOGGER =====================
@@ -172,38 +172,71 @@ app.get('/students', (req, res) => {
   });
 });
 
-// Update student + sync with users
+// ✅ Fixed Update student + sync with users
 app.put('/students/:id', (req, res) => {
   const studentId = req.params.id;
   const { fullName, email, mobile, batch, dob, gender, address, parentsContact } = req.body;
 
-  const updateStudent = `
-    UPDATE students 
-    SET fullName = ?, email = ?, mobile = ?, batch = ?, dob = ?, gender = ?, address = ?, parentsContact = ?
-    WHERE id = ?
-  `;
+  // First fetch existing student
+  db.query('SELECT * FROM students WHERE id = ?', [studentId], (err, results) => {
+    if (err) return res.status(500).send('Error fetching student');
+    if (results.length === 0) return res.status(404).send('Student not found');
 
-  db.query(
-    updateStudent,
-    [fullName, email, mobile, batch, dob, gender, address, parentsContact, studentId],
-    (err) => {
-      if (err) {
-        console.error('❌ Error updating student:', err);
-        return res.status(500).send('Error updating student');
-      }
+    const existing = results[0];
 
-      // Sync only common fields
-      const updateUser =
-        'UPDATE users SET fullName = ?, email = ?, mobile = ? WHERE id = (SELECT user_id FROM students WHERE id = ?)';
-      db.query(updateUser, [fullName, email, mobile, studentId], (err2) => {
+    const updatedStudent = {
+      fullName: fullName || existing.fullName,
+      email: email || existing.email,
+      mobile: mobile || existing.mobile,
+      batch: batch || existing.batch,
+      dob: dob || existing.dob,
+      gender: gender || existing.gender,
+      address: address || existing.address,
+      parentsContact: parentsContact || existing.parentsContact,
+    };
+
+    const updateStudent = `
+      UPDATE students 
+      SET fullName = ?, email = ?, mobile = ?, batch = ?, dob = ?, gender = ?, address = ?, parentsContact = ?
+      WHERE id = ?
+    `;
+
+    db.query(
+      updateStudent,
+      [
+        updatedStudent.fullName,
+        updatedStudent.email,
+        updatedStudent.mobile,
+        updatedStudent.batch,
+        updatedStudent.dob,
+        updatedStudent.gender,
+        updatedStudent.address,
+        updatedStudent.parentsContact,
+        studentId,
+      ],
+      (err2) => {
         if (err2) {
-          console.error('❌ Error syncing user:', err2);
-          return res.status(500).send('Error syncing user data');
+          console.error('❌ Error updating student:', err2);
+          return res.status(500).send('Error updating student');
         }
-        res.json({ success: true, message: 'Student updated successfully' });
-      });
-    }
-  );
+
+        // Sync only common fields
+        const updateUser =
+          'UPDATE users SET fullName = ?, email = ?, mobile = ? WHERE id = (SELECT user_id FROM students WHERE id = ?)';
+        db.query(
+          updateUser,
+          [updatedStudent.fullName, updatedStudent.email, updatedStudent.mobile, studentId],
+          (err3) => {
+            if (err3) {
+              console.error('❌ Error syncing user:', err3);
+              return res.status(500).send('Error syncing user data');
+            }
+            res.json({ success: true, message: 'Student updated successfully' });
+          }
+        );
+      }
+    );
+  });
 });
 
 // Delete student + linked user
