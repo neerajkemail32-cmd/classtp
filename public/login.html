@@ -33,6 +33,14 @@
           <label for="password" class="form-label">Password</label>
           <input type="password" class="form-control" id="password" name="password" required />
         </div>
+        <div class="mb-3">
+          <label for="role" class="form-label">Role</label>
+          <select class="form-select" id="role" name="role" required>
+            <option value="">-- Select Role --</option>
+            <option value="student">Student</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
         <div class="d-grid">
           <button type="submit" class="btn btn-primary">Login</button>
         </div>
@@ -56,9 +64,10 @@ form.addEventListener('submit', async (e) => {
 
   const email = form.email.value.trim();
   const password = form.password.value.trim();
+  const role = form.role.value.trim();
 
-  if (!email || !password) {
-    errorMsg.textContent = 'Please fill all fields.';
+  if (!email || !password || !role) {
+    errorMsg.textContent = 'Please fill all fields including role.';
     errorMsg.classList.remove('d-none');
     return;
   }
@@ -67,21 +76,20 @@ form.addEventListener('submit', async (e) => {
     const res = await fetch('/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, role }),
     });
 
     const data = await res.json();
 
     if (res.ok && data.success) {
-      // ✅ Save common data
+      // Save user info in localStorage
       localStorage.setItem('userEmail', data.email);
       localStorage.setItem('userRole', data.role);
 
       if (data.role === 'student') {
-        // Store student-specific details
         if (data.profile) {
-          localStorage.setItem('studentId', data.profile.id);   // from students table
-          localStorage.setItem('userId', data.profile.user_id); // from users table (FK)
+          localStorage.setItem('studentId', data.profile.id);
+          localStorage.setItem('userId', data.profile.user_id);
         }
         window.location.href = 'student_dashboard.html';
       } else if (data.role === 'admin') {
