@@ -23,7 +23,7 @@ app.use((req, res, next) => {
 app.post('/register', async (req, res) => {
   try {
     const { fullName, email, mobile, password } = req.body;
-    const role = 'student'; // Default role for registration
+    const role = 'student'; 
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -103,7 +103,7 @@ app.post('/login', (req, res) => {
 
 // ===================== STUDENT ROUTES =====================
 
-// Get student by email
+
 app.get('/students/email/:email', (req, res) => {
   const email = req.params.email;
   const sql = 'SELECT * FROM students WHERE email = ?';
@@ -114,7 +114,7 @@ app.get('/students/email/:email', (req, res) => {
   });
 });
 
-// Admin adds new student
+
 app.post('/students', async (req, res) => {
   try {
     const {
@@ -163,7 +163,7 @@ app.post('/students', async (req, res) => {
   }
 });
 
-// Get all students
+
 app.get('/students', (req, res) => {
   const sql = 'SELECT * FROM students';
   db.query(sql, (err, results) => {
@@ -172,12 +172,12 @@ app.get('/students', (req, res) => {
   });
 });
 
-// ✅ Fixed Update student + sync with users
+
 app.put('/students/:id', (req, res) => {
   const studentId = req.params.id;
   const { fullName, email, mobile, batch, dob, gender, address, parentsContact } = req.body;
 
-  // First fetch existing student
+  
   db.query('SELECT * FROM students WHERE id = ?', [studentId], (err, results) => {
     if (err) return res.status(500).send('Error fetching student');
     if (results.length === 0) return res.status(404).send('Student not found');
@@ -262,6 +262,30 @@ app.delete('/students/:id', (req, res) => {
     });
   });
 });
+// ===================== CHANGE PASSWORD =====================
+app.post('/change-password', async (req, res) => {
+  const { email, currentPassword, newPassword } = req.body;
+  if (!email || !currentPassword || !newPassword)
+    return res.status(400).send('Missing required fields');
+
+  const sql = 'SELECT * FROM users WHERE email = ?';
+  db.query(sql, [email], async (err, results) => {
+    if (err) return res.status(500).send('Server error');
+    if (results.length === 0) return res.status(404).send('User not found');
+
+    const user = results[0];
+    const match = await bcrypt.compare(currentPassword, user.password);
+    if (!match) return res.status(401).send('Current password is incorrect');
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const updateSql = 'UPDATE users SET password = ? WHERE email = ?';
+    db.query(updateSql, [hashedPassword, email], (err2) => {
+      if (err2) return res.status(500).send('Error updating password');
+      res.send('Password changed successfully');
+    });
+  });
+});
+
 
 // ===================== FEES ROUTES =====================
 app.get('/fees/student/:id', (req, res) => {
