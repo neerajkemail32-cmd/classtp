@@ -238,6 +238,21 @@ app.put('/students/:id', (req, res) => {
     );
   });
 });
+// Get student by ID
+app.get('/students/:id', (req, res) => {
+  const studentId = req.params.id;
+  const sql = 'SELECT * FROM students WHERE id = ?';
+  db.query(sql, [studentId], (err, results) => {
+    if (err) {
+      console.error('❌ Error fetching student by ID:', err);
+      return res.status(500).send('Server error fetching student');
+    }
+    if (results.length === 0) {
+      return res.status(404).send('Student not found');
+    }
+    res.json(results[0]);
+  });
+});
 
 // Delete student + linked user
 app.delete('/students/:id', (req, res) => {
