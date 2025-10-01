@@ -1,94 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f4;
-        }
-        .profile-container {
-            max-width: 600px;
-            margin: auto;
-        }
-        h2 {
-            text-align: center;
-            color: #333;
-        }
-        .profile-info p {
-            margin: 10px 0;
-            line-height: 1.6;
-        }
-        .profile-info strong {
-            display: inline-block;
-            width: 150px;
-            color: #555;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Profile</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f4;
+    }
+    .profile-container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    .profile-info p {
+      margin: 10px 0;
+      line-height: 1.6;
+    }
+    .profile-info strong {
+      display: inline-block;
+      width: 150px;
+      color: #555;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="profile-container">
-        <h2>Student Profile</h2>
-        <div class="profile-info">
-            <p><strong>Full Name:</strong> <span id="fullName"></span></p>
-            <p><strong>Email:</strong> <span id="email"></span></p>
-            <p><strong>Mobile:</strong> <span id="mobile"></span></p>
-            <p><strong>Batch:</strong> <span id="batch"></span></p>
-            <p><strong>Date of Birth:</strong> <span id="dob"></span></p>
-            <p><strong>Gender:</strong> <span id="gender"></span></p>
-            <p><strong>Address:</strong> <span id="address"></span></p>
-            <p><strong>Parent's Contact:</strong> <span id="parentsContact"></span></p>
-        </div>
-        <div style="text-align: center; margin-top: 20px;">
-            <a href="student_dashboard.html">Back to Dashboard</a>
-        </div>
+  <div class="profile-container">
+    <h2>Student Profile</h2>
+    <div class="profile-info">
+      <p><strong>Full Name:</strong> <span id="fullName"></span></p>
+      <p><strong>Email:</strong> <span id="email"></span></p>
+      <p><strong>Mobile:</strong> <span id="mobile"></span></p>
+      <p><strong>Batch:</strong> <span id="batch"></span></p>
+      <p><strong>Date of Birth:</strong> <span id="dob"></span></p>
+      <p><strong>Gender:</strong> <span id="gender"></span></p>
+      <p><strong>Address:</strong> <span id="address"></span></p>
+      <p><strong>Parent's Contact:</strong> <span id="parentsContact"></span></p>
     </div>
+    <div style="text-align: center; margin-top: 20px;">
+      <a href="student_dashboard.html">Back to Dashboard</a>
+    </div>
+  </div>
 
-    <script>
-        const API_BASE = "https://classtp.onrender.com";
-        const email = localStorage.getItem('userEmail');
-        const role = localStorage.getItem('userRole');
+  <script>
+    const API_BASE = "https://classtp.onrender.com";
 
-        function formatDate(dateString) {
-            if (!dateString) return 'N/A';
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-GB'); // DD/MM/YYYY
+    function formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-GB'); // DD/MM/YYYY
+    }
+
+    window.onload = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const studentId = urlParams.get("id");
+      
+      let endpoint = "";
+
+      if (studentId) {
+        // Case 1: Admin opened profile with student id
+        endpoint = `${API_BASE}/students/${studentId}`;
+      } else {
+        // Case 2: Student logged in themselves
+        const email = localStorage.getItem("userEmail");
+        const role = localStorage.getItem("userRole");
+        if (!email || role !== "student") {
+          alert("Please login as student first.");
+          window.location.href = "login.html";
+          return;
         }
+        endpoint = `${API_BASE}/students/email/${email}`;
+      }
 
-        window.onload = () => {
-            if (!email || role !== "student") {
-                alert('Please login as student first.');
-                window.location.href = 'login.html';
-                return;
-            }
-
-            fetch(`${API_BASE}/students/email/${email}`)
-                .then(res => {
-                    if (!res.ok) {
-                        throw new Error('Could not fetch profile data.');
-                    }
-                    return res.json();
-                })
-                .then(student => {
-                    document.getElementById('fullName').textContent = student.fullName || 'N/A';
-                    document.getElementById('email').textContent = student.email || 'N/A';
-                    document.getElementById('mobile').textContent = student.mobile || 'N/A';
-                    document.getElementById('batch').textContent = student.batch || 'N/A';
-                    document.getElementById('dob').textContent = formatDate(student.dob);
-                    document.getElementById('gender').textContent = student.gender || 'N/A';
-                    document.getElementById('address').textContent = student.address || 'N/A';
-                    document.getElementById('parentsContact').textContent = student.parentsContact || 'N/A';
-                })
-                .catch(err => {
-                    console.error('Error:', err);
-                    alert(err.message);
-                });
-        };
-    </script>
+      fetch(endpoint)
+        .then(res => {
+          if (!res.ok) throw new Error("Could not fetch profile data.");
+          return res.json();
+        })
+        .then(student => {
+          document.getElementById('fullName').textContent = student.fullName || 'N/A';
+          document.getElementById('email').textContent = student.email || 'N/A';
+          document.getElementById('mobile').textContent = student.mobile || 'N/A';
+          document.getElementById('batch').textContent = student.batch || 'N/A';
+          document.getElementById('dob').textContent = formatDate(student.dob);
+          document.getElementById('gender').textContent = student.gender || 'N/A';
+          document.getElementById('address').textContent = student.address || 'N/A';
+          document.getElementById('parentsContact').textContent = student.parentsContact || 'N/A';
+        })
+        .catch(err => {
+          console.error("Error:", err);
+          alert(err.message);
+        });
+    };
+  </script>
 
 </body>
 </html>
