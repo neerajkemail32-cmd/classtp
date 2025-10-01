@@ -230,7 +230,7 @@ function showStudents(students) {
         <td>${s.batch || 'N/A'}</td>
         <td>${s.id}</td> <!-- ✅ Show student ID -->
         <td>
-          <button class="btn btn-info btn-sm" onclick="viewProfile('12345')">Detail</button>
+          <button class="btn btn-info btn-sm" onclick="viewProfile('${s.id}')"">Detail</button>
 
           <button class="btn btn-sm btn-warning me-1" onclick="editStudent(${s.id})">Edit</button>
           <button class="btn btn-sm btn-danger" onclick="deleteStudent(${s.id})">Delete</button>
