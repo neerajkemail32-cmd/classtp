@@ -50,26 +50,24 @@
     <form id="editForm" novalidate>
       <div><label for="fullName">Full Name:</label><input type="text" id="fullName" required /></div>
       <div><label for="email">Email:</label><input type="email" id="email" disabled /></div>
-      <div><label for="dob">Date of Birth:</label><input type="date" id="dob" /></div>
+      <div><label for="dob">Date of Birth:</label><input type="date" id="dob" required /></div>
       <div>
         <label for="gender">Gender:</label>
-        <select id="gender">
+        <select id="gender" required>
           <option value="">Select</option>
           <option value="Male">Male</option>
           <option value="Female">Female</option>
           <option value="Other">Other</option>
         </select>
       </div>
-      <div><label for="mobile">Mobile:</label><input type="text" id="mobile" inputmode="numeric" /></div>
-      <div><label for="address">Address:</label><textarea id="address" rows="3"></textarea></div>
-      <div><label for="parentsContact">Parent Contact:</label><input type="text" id="parentsContact" inputmode="numeric" /></div>
+      <div><label for="mobile">Mobile:</label><input type="text" id="mobile" inputmode="numeric" required /></div>
+      <div><label for="address">Address:</label><textarea id="address" rows="3" required></textarea></div>
+      <div><label for="parentsContact">Parent Contact:</label><input type="text" id="parentsContact" inputmode="numeric" required /></div>
       <input type="hidden" id="batch" />
       <button type="submit" id="submitBtn">Update Profile</button>
     </form>
 
-    <!-- Change Password Button -->
     <button id="changePasswordBtn" onclick="window.location.href='change_password.html'">Change Password</button>
-
     <a href="student_dashboard.html" class="back-link">Back to Dashboard</a>
   </div>
 
@@ -104,6 +102,7 @@
         return;
       }
 
+      // Load student data
       (async function loadStudent() {
         hideMessage();
         showMessage("Loading profile...", "info");
@@ -145,16 +144,29 @@
         const parentsContact = document.getElementById("parentsContact").value.trim();
         const batch = document.getElementById("batch").value;
 
-        if (!fullName) {
-          showMessage("Full name is required.", "error");
+        // ✅ Validation
+        if (!fullName || fullName.length < 3) {
+          showMessage("Full Name is required and must be at least 3 characters.", "error");
           return;
         }
-        if (mobile && !/^\d{10}$/.test(mobile)) {
-          showMessage("Enter a valid 10-digit mobile number.", "error");
+        if (!dob) {
+          showMessage("Date of Birth is required.", "error");
           return;
         }
-        if (parentsContact && !/^\d{7,15}$/.test(parentsContact)) {
-          showMessage("Enter a valid parent contact number.", "error");
+        if (!gender) {
+          showMessage("Please select a gender.", "error");
+          return;
+        }
+        if (!mobile || !/^\d{10}$/.test(mobile)) {
+          showMessage("Mobile number is required and must be 10 digits.", "error");
+          return;
+        }
+        if (!address || address.length < 5) {
+          showMessage("Address is required and must be at least 5 characters.", "error");
+          return;
+        }
+        if (!parentsContact || !/^\d{10}$/.test(parentsContact)) {
+          showMessage("Parent Contact is required and must be 10 digits.", "error");
           return;
         }
 

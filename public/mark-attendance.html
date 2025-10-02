@@ -9,6 +9,9 @@
 
   <h2 class="mb-3">Mark Attendance</h2>
 
+  <!-- Alert Message -->
+  <div id="alertMessage" class="alert" style="display:none;"></div>
+
   <!-- Select Batch & Date -->
   <div class="mb-3">
     <label class="form-label">Batch</label>
@@ -38,22 +41,36 @@
   </form>
 
   <script>
+    const alertMessage = document.getElementById('alertMessage');
+
+    function showAlert(msg, type = 'success') {
+      alertMessage.textContent = msg;
+      alertMessage.className = 'alert ' + (type === 'success' ? 'alert-success' : 'alert-danger');
+      alertMessage.style.display = 'block';
+      setTimeout(() => alertMessage.style.display = 'none', 3000);
+    }
+
     // Load students by batch
     function loadStudents() {
       const batch = document.getElementById('batchSelect').value;
       const date = document.getElementById('attendanceDate').value;
 
       if (!batch || !date) {
-        alert("Please select batch and date!");
+        showAlert("Please select batch and date!", 'error');
         return;
       }
 
       fetch(`/students/batch/${batch}`)
         .then(res => res.json())
         .then(data => {
-          console.log("Students fetched:", data); // Debugging log
           const tbody = document.getElementById('studentsList');
           tbody.innerHTML = '';
+
+          if (data.length === 0) {
+            showAlert("No students found in this batch.", 'error');
+            document.getElementById('attendanceForm').style.display = 'none';
+            return;
+          }
 
           data.forEach(s => {
             tbody.innerHTML += `
@@ -72,7 +89,7 @@
         })
         .catch(err => {
           console.error("Error fetching students:", err);
-          alert("Error loading students for this batch");
+          showAlert("Error loading students for this batch", 'error');
         });
     }
 
@@ -93,9 +110,20 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ batch, date, statuses })
       })
-      .then(res => res.text())
-      .then(msg => alert(msg))
-      .catch(err => console.error("Error saving attendance:", err));
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          showAlert(data.message || "Attendance submitted successfully!");
+          document.getElementById('attendanceForm').reset();
+          document.getElementById('attendanceForm').style.display = 'none';
+        } else {
+          showAlert(data.message || "Failed to submit attendance.", 'error');
+        }
+      })
+      .catch(err => {
+        console.error("Error saving attendance:", err);
+        showAlert("Error saving attendance.", 'error');
+      });
     });
 
     // Load batches into dropdown
@@ -103,7 +131,6 @@
       fetch('/batches')
         .then(res => res.json())
         .then(batches => {
-          console.log("Batches fetched:", batches); // Debugging log
           const batchSelect = document.getElementById('batchSelect');
           batches.forEach(b => {
             const opt = document.createElement('option');
@@ -114,7 +141,7 @@
         })
         .catch(err => {
           console.error("Error fetching batches:", err);
-          alert("Error loading batches");
+          showAlert("Error loading batches", 'error');
         });
     });
   </script>
