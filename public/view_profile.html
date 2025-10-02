@@ -31,6 +31,28 @@
       width: 150px;
       color: #555;
     }
+    .student-id {
+      margin-top: 20px;
+      font-weight: bold;
+      text-align: center;
+      color: #222;
+      background-color: #e9ecef;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .btn-back {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      text-decoration: none;
+      color: #fff;
+      background-color: #333;
+      padding: 10px 20px;
+      border-radius: 5px;
+    }
+    .btn-back:hover {
+      background-color: #555;
+    }
   </style>
 </head>
 <body>
@@ -47,9 +69,13 @@
       <p><strong>Address:</strong> <span id="address"></span></p>
       <p><strong>Parent's Contact:</strong> <span id="parentsContact"></span></p>
     </div>
-    <div style="text-align: center; margin-top: 20px;">
-      <a href="student_dashboard.html">Back to Dashboard</a>
+
+    <!-- ✅ New Student ID line -->
+    <div class="student-id">
+      Student ID: <span id="studentId"></span>
     </div>
+
+    <a href="student_dashboard.html" class="btn-back">Back to Dashboard</a>
   </div>
 
   <script>
@@ -63,15 +89,15 @@
 
     window.onload = () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const studentId = urlParams.get("id");
+      const studentIdParam = urlParams.get("id");
       
       let endpoint = "";
 
-      if (studentId) {
-        // Case 1: Admin opened profile with student id
-        endpoint = `${API_BASE}/students/${studentId}`;
+      if (studentIdParam) {
+        // Admin opens profile with student ID
+        endpoint = `${API_BASE}/students/${studentIdParam}`;
       } else {
-        // Case 2: Student logged in themselves
+        // Student logged in themselves
         const email = localStorage.getItem("userEmail");
         const role = localStorage.getItem("userRole");
         if (!email || role !== "student") {
@@ -96,6 +122,9 @@
           document.getElementById('gender').textContent = student.gender || 'N/A';
           document.getElementById('address').textContent = student.address || 'N/A';
           document.getElementById('parentsContact').textContent = student.parentsContact || 'N/A';
+
+          // ✅ Display Student ID
+          document.getElementById('studentId').textContent = student.id || 'N/A';
         })
         .catch(err => {
           console.error("Error:", err);

@@ -14,8 +14,8 @@
       margin: 60px auto;
       padding: 30px;
       background: #fff;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      border-radius: 10px;
     }
   </style>
 </head>
@@ -25,10 +25,10 @@
     <div class="register-box">
       <h3 class="text-center mb-4">Student Registration</h3>
 
-      <!-- Error Box -->
+      <!-- Error and Success messages -->
       <div id="errorMsg" class="alert alert-danger d-none"></div>
+      <div id="successMsg" class="alert alert-success d-none"></div>
 
-      <!-- ✅ Hidden role added -->
       <form id="registerForm" action="/register" method="POST">
         <div class="mb-3">
           <label for="fullname" class="form-label">Full Name</label>
@@ -51,7 +51,6 @@
           <input type="password" class="form-control" id="confirm-password" name="confirm-password" required />
         </div>
 
-        <!-- ✅ Always assign role = student -->
         <input type="hidden" name="role" value="student" />
 
         <div class="d-grid">
@@ -68,57 +67,72 @@
   <script>
     const form = document.getElementById('registerForm');
     const errorMsg = document.getElementById('errorMsg');
+    const successMsg = document.getElementById('successMsg');
 
-    form.addEventListener('submit', function (e) {
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault(); // prevent default form submission
+
+      // Clear previous messages
+      errorMsg.classList.add('d-none');
+      errorMsg.textContent = '';
+      successMsg.classList.add('d-none');
+      successMsg.textContent = '';
+
+      // Get form values
       const fullName = form.fullName.value.trim();
       const email = form.email.value.trim();
       const mobile = form.mobile.value.trim();
       const password = form.password.value.trim();
       const confirmPassword = form['confirm-password'].value.trim();
 
-      // Clear previous error
-      errorMsg.classList.add('d-none');
-      errorMsg.textContent = '';
-
-      // ✅ Name validation (only alphabets + spaces)
+      // Client-side validation
       if (!/^[A-Za-z ]+$/.test(fullName)) {
-        e.preventDefault();
         errorMsg.textContent = 'Full name must contain only letters and spaces.';
         errorMsg.classList.remove('d-none');
         return;
       }
-
-      // ✅ Email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        e.preventDefault();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         errorMsg.textContent = 'Please enter a valid email address.';
         errorMsg.classList.remove('d-none');
         return;
       }
-
-      // ✅ Mobile validation (10 digits only)
       if (!/^\d{10}$/.test(mobile)) {
-        e.preventDefault();
         errorMsg.textContent = 'Mobile number must be exactly 10 digits.';
         errorMsg.classList.remove('d-none');
         return;
       }
-
-      // ✅ Password match
       if (password !== confirmPassword) {
-        e.preventDefault();
-        errorMsg.textContent = 'Passwords do not match. Please try again.';
+        errorMsg.textContent = 'Passwords do not match.';
+        errorMsg.classList.remove('d-none');
+        return;
+      }
+      if (password.length < 6) {
+        errorMsg.textContent = 'Password must be at least 6 characters.';
         errorMsg.classList.remove('d-none');
         return;
       }
 
-      // ✅ Password length
-      if (password.length < 6) {
-        e.preventDefault();
-        errorMsg.textContent = 'Password must be at least 6 characters.';
+      // Send data to server
+      try {
+        const response = await fetch('/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fullName, email, mobile, password })
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          successMsg.textContent = result.message || 'Registered Successfully!';
+          successMsg.classList.remove('d-none');
+          form.reset();
+        } else {
+          errorMsg.textContent = result.message || 'Registration failed.';
+          errorMsg.classList.remove('d-none');
+        }
+      } catch (err) {
+        console.error(err);
+        errorMsg.textContent = 'Server error. Please try again later.';
         errorMsg.classList.remove('d-none');
-        return;
       }
     });
   </script>
@@ -126,4 +140,3 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
