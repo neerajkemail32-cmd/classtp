@@ -149,7 +149,18 @@
 </div>
 
 <script>
-const API_BASE = "https://classtp.onrender.com"; // Replace with your server URL
+const API_BASE = "https://classtp.onrender.com";
+
+
+    // ================= Login/Session Check =================
+    const userEmail = localStorage.getItem('userEmail');
+    const userRole = localStorage.getItem('userRole');
+
+    if (!userEmail || userRole !== 'admin') {
+      alert('Please login first.');
+      window.location.href = 'login.html'; // redirect to login page
+    }
+ 
 let allStudents = []; // Global variable to store all students
 
 // Show/hide sections
