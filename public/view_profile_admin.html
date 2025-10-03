@@ -34,13 +34,23 @@
   <script>
     const API_BASE = "https://classtp.onrender.com"; // your server URL
 
+    // ================= Login/Session Check =================
+    const userEmail = localStorage.getItem('userEmail');
+    const userRole = localStorage.getItem('userRole');
+
+    if (!userEmail || userRole !== 'admin') {
+      alert('Please login first.');
+      window.location.href = 'login.html'; // redirect to login page
+    }
+
+    // ================= Utility Function =================
     function formatDate(dateString) {
       if (!dateString) return 'N/A';
       const date = new Date(dateString);
       return date.toLocaleDateString('en-GB'); // DD/MM/YYYY
     }
 
-    // Get student ID from URL param
+    // ================= Get Student ID from URL =================
     const urlParams = new URLSearchParams(window.location.search);
     const studentId = urlParams.get('id');
 
@@ -49,7 +59,7 @@
       window.location.href = 'admin_dashboard.html';
     }
 
-    // Fetch student by ID
+    // ================= Fetch Student by ID =================
     fetch(`${API_BASE}/students/${studentId}`)
       .then(res => {
         if (!res.ok) throw new Error('Student not found');
